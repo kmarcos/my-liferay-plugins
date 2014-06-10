@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE project>
+
+<project name="content-tree-view-hook" basedir="." default="deploy">
+	<import file="/Users/katalinamarcos/Projects/OpenSource/repositories/github/kmarcos/my-liferay-plugins/hooks/build-common-hook.xml" />
+</project>
