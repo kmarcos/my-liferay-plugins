@@ -344,6 +344,8 @@ request.setAttribute("view_entries.jsp-entryEnd", String.valueOf(searchContainer
 </c:if>
 
 <%-- RivetLogic Custom BEGINS --%>
+<c:if test='<%= displayStyle.equals(TREE_VIEW) %>'>
+
 <%
 	long treeFolderId = DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
 	String treeFolderTitle = LanguageUtil.get(pageContext, "home");
@@ -372,6 +374,7 @@ if (<portlet:namespace />treeViewNode == undefined){
 }
 
 </aui:script>
+</c:if>
 <%-- RivetLogic Custom ENDS --%>
 
 <%
