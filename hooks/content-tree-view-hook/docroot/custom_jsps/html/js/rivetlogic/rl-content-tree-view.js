@@ -31,6 +31,7 @@ AUI.add('rl-content-tree-view', function (A) {
         		        	{
         		        		id: folderId,
         		        		label: folderLabel,
+        		        		leaf:false,
         		        		expanded: true
         		        	}
         		       	]
@@ -57,30 +58,23 @@ AUI.add('rl-content-tree-view', function (A) {
         },
         
         _clickRivetHandler: function(event){
-        	console.log("click node ");
+
         	event.stopPropagation();
 
         	var treeNode = this.contentTree.getNodeById(event.currentTarget.attr('id'));
-        	if (treeNode) {
-        		console.log(treeNode);
-        		console.log(treeNode.get('label'));
-        		console.log(treeNode.get('isFolder'));
-        		console.log(treeNode.get('fullLoaded'));
-        		
-        	} 
+ 
         	if (treeNode && !(treeNode.get('fullLoaded'))){
-        		console.log('loading children...');
         		this._getChildren(treeNode, this);
         	}
         },
         
-       _addContentNode: function(newNodeConfig, parentNode, isFolder, fullLoaded){       	
-                	
+       _addContentNode: function(newNodeConfig, parentNode, isFolder, fullLoaded){       	  
         	var newNode = this.contentRoot.createNode(
 			  {
 			    id: newNodeConfig.id,
-			    label: newNodeConfig.label
-			    
+			    label: newNodeConfig.label,
+			    leaf:!isFolder,
+        		expanded: false
 			  }
 			);
         	
@@ -104,11 +98,7 @@ AUI.add('rl-content-tree-view', function (A) {
            				parentFolderId: treeNode.get('id')
            			},
            			function(folders) {
-           				console.log(folders);
            				A.each(folders, function(item, index, collection){    
-           					
-           					console.log("tree node "+treeNode);
-           					console.log("item "+item.folderId);
 
            					instance.addContentFolder({
            						id : item.folderId.toString(),
@@ -128,7 +118,7 @@ AUI.add('rl-content-tree-view', function (A) {
         				folderId: treeNode.get('id')
         			},
         			function(entries) {
-        				console.log(entries);
+        				
         				A.each(entries, function(item, index, collection){
         					
         					instance.addContentEntry({
