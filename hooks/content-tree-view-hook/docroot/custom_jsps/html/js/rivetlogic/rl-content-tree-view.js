@@ -33,11 +33,21 @@ AUI.add('rl-content-tree-view', function (A) {
         		        children: [
         		        	{
         		        		id: folderId,
-        		        		label: folderLabel,
+        		        		label: folderLabel+'-'+folderId,
+        		        		draggable: false,
+        		        		alwaysShowHitArea: true,
         		        		leaf:false,
         		        		expanded: true
         		        	}
-        		       	]
+        		       	],
+        		       	on: {
+        		       		'drop:hit': A.bind(instance._dropHitRivetHandler,this),   
+        		       	    lastSelectedChange: function(event){  
+        		       	      var id = event.newVal.get('id');  
+        		       	      selected = id;  
+        		       	      console.log ("selected "+id);
+        		       	    } 
+        		       	}
         		      }
         		    ).render();
         	
@@ -47,7 +57,6 @@ AUI.add('rl-content-tree-view', function (A) {
         	
         	var boundingBox = this.contentTree.get(BOUNDING_BOX);        	
         	boundingBox.delegate('click', A.bind(instance._clickRivetHandler,this), NODE_SELECTOR);
-        	this.contentTree.on('drop:hit', A.bind(instance._dropHitRivetHandler,this));
         	//this.contentTree.on('drop:over', A.bind(instance._dropOverRivetHandler,this));
 
         },
@@ -67,7 +76,7 @@ AUI.add('rl-content-tree-view', function (A) {
             var dragTreeNode = dragNode.getData(TREE_NODE);
             var dropNode = event.drop.get(NODE).get(PARENT_NODE);
             var dropTreeNode = dropNode.getData(TREE_NODE);
-
+            
             this._moveContentNode(dragTreeNode,dropTreeNode);
             	
         },
@@ -164,7 +173,9 @@ AUI.add('rl-content-tree-view', function (A) {
         	var newNode = this.contentRoot.createNode(
 			  {
 			    id: newNodeConfig.id,
-			    label: newNodeConfig.label,
+			    label: newNodeConfig.label+'-'+newNodeConfig.id,
+			    draggable: true,
+        		alwaysShowHitArea: true,
 			    leaf:!isFolder,
         		expanded: false
 			  }
