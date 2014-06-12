@@ -4,9 +4,11 @@ AUI.add('rl-content-tree-view', function (A) {
 
 	var BOUNDING_BOX = 'boundingBox';
 	var NODE_SELECTOR = '.tree-node';
-	var NODE = 'node';
-	var PARENT_NODE = 'parentNode';
 	var TREE_NODE = 'tree-node';
+	var PARENT_NODE = 'parentNode';
+	var NODE = 'node';
+	var NODE_ATTR_IS_FOLDER = 'isFolder';
+	var NODE_ATTR_FULL_LOADED = 'fullLoaded';
 	 
     A.Rivet.ContentTreeView = A.Base.create('rl-content-tree-view',A.Base, [], {
 
@@ -52,13 +54,11 @@ AUI.add('rl-content-tree-view', function (A) {
         		    ).render();
         	
         	this.contentRoot = this.contentTree.getNodeById(folderId);
-        	this.contentRoot.set('isFolder', true);
-        	this.contentRoot.set('fullLoaded', true);
+        	this.contentRoot.set(NODE_ATTR_IS_FOLDER, true);
+        	this.contentRoot.set(NODE_ATTR_FULL_LOADED, true);
         	
         	var boundingBox = this.contentTree.get(BOUNDING_BOX);        	
         	boundingBox.delegate('click', A.bind(instance._clickRivetHandler,this), NODE_SELECTOR);
-        	//this.contentTree.on('drop:over', A.bind(instance._dropOverRivetHandler,this));
-
         },
         
         addContentFolder: function(newNodeConfig, parentNode){
@@ -72,6 +72,7 @@ AUI.add('rl-content-tree-view', function (A) {
         },
         
         _dropHitRivetHandler: function(event){
+        	
         	var dragNode = event.drag.get(NODE).get(PARENT_NODE);
             var dragTreeNode = dragNode.getData(TREE_NODE);
             var dropNode = event.drop.get(NODE).get(PARENT_NODE);
@@ -160,11 +161,12 @@ AUI.add('rl-content-tree-view', function (A) {
         
         _clickRivetHandler: function(event){
 
+        	console.log('onclick');
         	event.stopPropagation();
 
         	var treeNode = this.contentTree.getNodeById(event.currentTarget.attr('id'));
  
-        	if (treeNode && !(treeNode.get('fullLoaded'))){
+        	if (treeNode && !(this._isFullLoaded(treeNode))){
         		this._getChildren(treeNode, this);
         	}
         },
@@ -181,16 +183,20 @@ AUI.add('rl-content-tree-view', function (A) {
 			  }
 			);
         	
-        	newNode.set('isFolder', isFolder);
-        	newNode.set('fullLoaded', fullLoaded);
+        	newNode.set(NODE_ATTR_IS_FOLDER, isFolder);
+        	newNode.set(NODE_ATTR_FULL_LOADED, fullLoaded);
         	
-        	//newNode.on('drop:hit', A.bind(this ._dropHitRivetHandler,this));
-        	
+        	var forceBindUI = false;
         	if (parentNode === undefined){
         		parentNode = this.contentRoot;
+        		forceBindUI = true;
         	}
         	      	
         	parentNode.appendChild(newNode);
+        	
+        	if (forceBindUI){
+        		this.contentTree.bindUI();
+        	}
         },
         
         _getChildren: function(treeNode, instance) {        	
@@ -209,8 +215,6 @@ AUI.add('rl-content-tree-view', function (A) {
            						id : item.folderId.toString(),
            						label: item.name
            					},treeNode);
-           					
-           					treeNode.expand();
            				});
            			}
            		);
@@ -230,19 +234,26 @@ AUI.add('rl-content-tree-view', function (A) {
         						id : item.fileEntryId.toString(),
         						label: item.title
         					},treeNode);
-        					
-        					treeNode.expand();
         				});
         			}
         	);
         	   
-        	treeNode.set('fullLoaded', true);
+        	treeNode.set(NODE_ATTR_FULL_LOADED, true);
+        	treeNode.expand();
         },
         
         _isFolder: function(treeNode){
         	result = false;
         	if (treeNode){
-        		result = treeNode.get('isFolder');
+        		result = treeNode.get(NODE_ATTR_IS_FOLDER);
+        	}
+        	return result;
+        },
+        
+        _isFullLoaded: function(treeNode){
+        	result = false;
+        	if (treeNode){
+        		result = treeNode.get(NODE_ATTR_FULL_LOADED);
         	}
         	return result;
         }
