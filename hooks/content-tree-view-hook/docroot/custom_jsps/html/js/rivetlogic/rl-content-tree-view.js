@@ -63,7 +63,6 @@ AUI.add('rl-content-tree-view', function (A) {
         },
         
         _dropHitRivetHandler: function(event){
-        	console.log('event');console.log(event);
         	var dragNode = event.drag.get(NODE).get(PARENT_NODE);
             var dragTreeNode = dragNode.getData(TREE_NODE);
             var dropNode = event.drop.get(NODE).get(PARENT_NODE);
@@ -74,7 +73,6 @@ AUI.add('rl-content-tree-view', function (A) {
         },
         
         _dropOverRivetHandler: function(event){
-        	console.log('event');console.log(event);
         	var dropNode = event.drop.get(NODE).get(PARENT_NODE);
         	console.log('dropNode');console.log(dropNode);
             var dropTreeNode = dropNode.getData(TREE_NODE);
@@ -115,13 +113,18 @@ AUI.add('rl-content-tree-view', function (A) {
         _moveContentFolder: function(folder, target){
         	console.log("folder id "+folder.get('id'));
         	console.log("target id "+target.get('id'));
-        	
+        	console.log("repository id "+this.repository);
         	Liferay.Service(
         			'/dlapp/move-folder',
         			{
         				repositoryId: this.repository,
         				folderId: folder.get('id'),
-        				parentFolderId: target.get('id')
+        				parentFolderId: target.get('id'),
+        				serviceContext: JSON.stringify(
+                            {
+                            	scopeGroupId: this.repository
+                            }
+                        )
         			}
         	);
         },
@@ -129,12 +132,19 @@ AUI.add('rl-content-tree-view', function (A) {
         _moveContentEntry: function(entry, target){
         	console.log("entry id "+entry.get('id'));
         	console.log("target id "+target.get('id'));
+        	console.log("repository id "+this.repository);
         	
         	Liferay.Service(
         			'/dlapp/move-file-entry',
         			{
+        				repositoryId: this.repository,        				
         				fileEntryId: entry.get('id'),
-        				newFolderId: target.get('id')
+        				newFolderId: target.get('id'),
+        				serviceContext: JSON.stringify(
+                            {
+                            	scopeGroupId: this.repository
+                            }
+                        )
         			}
         	);
         },
@@ -162,6 +172,8 @@ AUI.add('rl-content-tree-view', function (A) {
         	
         	newNode.set('isFolder', isFolder);
         	newNode.set('fullLoaded', fullLoaded);
+        	
+        	//newNode.on('drop:hit', A.bind(this ._dropHitRivetHandler,this));
         	
         	if (parentNode === undefined){
         		parentNode = this.contentRoot;
