@@ -4,6 +4,9 @@ AUI.add('rl-content-tree-view', function (A) {
 
 	var BOUNDING_BOX = 'boundingBox';
 	var NODE_SELECTOR = '.tree-node';
+	var NODE = 'node';
+	var PARENT_NODE = 'parentNode';
+	var TREE_NODE = 'tree-node';
 	 
     A.Rivet.ContentTreeView = A.Base.create('rl-content-tree-view',A.Base, [], {
 
@@ -43,7 +46,9 @@ AUI.add('rl-content-tree-view', function (A) {
         	this.contentRoot.set('fullLoaded', true);
         	
         	var boundingBox = this.contentTree.get(BOUNDING_BOX);        	
-        	boundingBox.delegate('click', A.bind(instance._clickRivetHandler,this), NODE_SELECTOR); 
+        	boundingBox.delegate('click', A.bind(instance._clickRivetHandler,this), NODE_SELECTOR);
+        	this.contentTree.on('drop:hit', A.bind(instance._dropHitRivetHandler,this));
+        	//this.contentTree.on('drop:over', A.bind(instance._dropOverRivetHandler,this));
 
         },
         
@@ -55,6 +60,83 @@ AUI.add('rl-content-tree-view', function (A) {
         addContentEntry: function(newNodeConfig, parentNode){
         	
         	this._addContentNode(newNodeConfig, parentNode, false, true);
+        },
+        
+        _dropHitRivetHandler: function(event){
+        	console.log('event');console.log(event);
+        	var dragNode = event.drag.get(NODE).get(PARENT_NODE);
+            var dragTreeNode = dragNode.getData(TREE_NODE);
+            var dropNode = event.drop.get(NODE).get(PARENT_NODE);
+            var dropTreeNode = dropNode.getData(TREE_NODE);
+
+            this._moveContentNode(dragTreeNode,dropTreeNode);
+            	
+        },
+        
+        _dropOverRivetHandler: function(event){
+        	console.log('event');console.log(event);
+        	var dropNode = event.drop.get(NODE).get(PARENT_NODE);
+        	console.log('dropNode');console.log(dropNode);
+            var dropTreeNode = dropNode.getData(TREE_NODE);
+            console.log('dropTreeNode');console.log(dropTreeNode);
+        },
+        
+        _moveContentNode: function(node, target){
+        	
+        	console.log('target');console.log(target);
+        	if (!this._isFolder(target)){
+        		console.log("is a leaf getting parent");
+        		target = target.get(PARENT_NODE);
+        	}
+        	console.log('target');console.log(target);
+        	
+        	
+        	var parentNode = node.get(PARENT_NODE);
+        	console.log('parentNode');console.log(parentNode);
+        	
+        	if (parentNode.get('id') != target.get('id')){
+        		
+	    		console.log(" moving "+node.get('id')+"-"+node.get('label'));
+	            console.log(" to "+target.get('id')+"-"+target.get('label'));
+	        	
+	        	if (this._isFolder(node)){
+	        		this._moveContentFolder(node, target);
+	        	}
+	        	else{
+	        		this._moveContentEntry(node, target);
+	        	}
+        	}
+        	else{
+        		console.log("no moved because is the same target folder");
+        	}
+        	        	
+        },
+        
+        _moveContentFolder: function(folder, target){
+        	console.log("folder id "+folder.get('id'));
+        	console.log("target id "+target.get('id'));
+        	
+        	Liferay.Service(
+        			'/dlapp/move-folder',
+        			{
+        				repositoryId: this.repository,
+        				folderId: folder.get('id'),
+        				parentFolderId: target.get('id')
+        			}
+        	);
+        },
+        
+        _moveContentEntry: function(entry, target){
+        	console.log("entry id "+entry.get('id'));
+        	console.log("target id "+target.get('id'));
+        	
+        	Liferay.Service(
+        			'/dlapp/move-file-entry',
+        			{
+        				fileEntryId: entry.get('id'),
+        				newFolderId: target.get('id')
+        			}
+        	);
         },
         
         _clickRivetHandler: function(event){
@@ -132,6 +214,14 @@ AUI.add('rl-content-tree-view', function (A) {
         	);
         	   
         	treeNode.set('fullLoaded', true);
+        },
+        
+        _isFolder: function(treeNode){
+        	result = false;
+        	if (treeNode){
+        		result = treeNode.get('isFolder');
+        	}
+        	return result;
         }
     
     }, {
