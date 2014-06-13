@@ -42,6 +42,9 @@ AUI.add('rl-content-tree-view', function (A) {
         		        		expanded: true
         		        	}
         		       	],
+        		       	after: {
+        		       		'drop:hit': A.bind(instance._afterDropHitRivetHandler,this)
+        		       	},
         		       	on: {
         		       		'drop:hit': A.bind(instance._dropHitRivetHandler,this),        		       		
         		       	    lastSelectedChange: function(event){  
@@ -80,6 +83,22 @@ AUI.add('rl-content-tree-view', function (A) {
             var dropTreeNode = dropNode.getData(TREE_NODE);
             
             this._moveContentNode(dragTreeNode,dropTreeNode);
+            	
+        },
+        _afterDropHitRivetHandler: function(event){
+        	
+        	console.log('after drop hit');console.log(event);
+        	
+            var dropNode = event.drop.get(NODE).get(PARENT_NODE);
+            var dropTreeNode = dropNode.getData(TREE_NODE);
+            
+            console.log(dropTreeNode);
+            
+            // If drop target is not loaded yet, we must empty to load all children
+        	if (!(this._isFullLoaded(dropTreeNode))){
+        		dropTreeNode.empty();
+    			this._getChildren(dropTreeNode, this);
+    		}
             	
         },
         
