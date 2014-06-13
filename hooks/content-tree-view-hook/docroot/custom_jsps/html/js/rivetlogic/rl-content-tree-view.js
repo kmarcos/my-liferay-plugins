@@ -94,6 +94,7 @@ AUI.add('rl-content-tree-view', function (A) {
             
             console.log(dropTreeNode);
             
+            //TODO: Review this, it would be better do this after drag node is added
             // If drop target is not loaded yet, we must empty to load all children
         	if (!(this._isFullLoaded(dropTreeNode))){
         		dropTreeNode.empty();
