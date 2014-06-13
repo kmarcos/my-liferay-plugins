@@ -43,7 +43,7 @@ AUI.add('rl-content-tree-view', function (A) {
         		        	}
         		       	],
         		       	on: {
-        		       		'drop:hit': A.bind(instance._dropHitRivetHandler,this),   
+        		       		'drop:hit': A.bind(instance._dropHitRivetHandler,this),        		       		
         		       	    lastSelectedChange: function(event){  
         		       	      var id = event.newVal.get('id');  
         		       	      selected = id;  
@@ -57,6 +57,7 @@ AUI.add('rl-content-tree-view', function (A) {
         	this.contentRoot.set(NODE_ATTR_IS_FOLDER, true);
         	this.contentRoot.set(NODE_ATTR_FULL_LOADED, true);
         	
+        	// Adding this event on this way because the click event seems on creations seems to be on tree level
         	var boundingBox = this.contentTree.get(BOUNDING_BOX);        	
         	boundingBox.delegate('click', A.bind(instance._clickRivetHandler,this), NODE_SELECTOR);
         },
@@ -161,14 +162,21 @@ AUI.add('rl-content-tree-view', function (A) {
         
         _clickRivetHandler: function(event){
 
-        	console.log('onclick');
+        	console.log('onclick handler');
         	event.stopPropagation();
 
         	var treeNode = this.contentTree.getNodeById(event.currentTarget.attr('id'));
  
-        	if (treeNode && !(this._isFullLoaded(treeNode))){
-        		this._getChildren(treeNode, this);
-        	}
+        	if (treeNode) {
+        	
+        		if (!(this._isFullLoaded(treeNode))){
+        			this._getChildren(treeNode, this);
+        		}
+        		else{
+        			//if is loading children, it will be expanded anyway
+        			treeNode.toggle();
+        		}
+            }
         },
         
        _addContentNode: function(newNodeConfig, parentNode, isFolder, fullLoaded){       	  
@@ -186,10 +194,10 @@ AUI.add('rl-content-tree-view', function (A) {
         	newNode.set(NODE_ATTR_IS_FOLDER, isFolder);
         	newNode.set(NODE_ATTR_FULL_LOADED, fullLoaded);
         	
-        	var forceBindUI = false;
+        	var forceBindUI = true;
         	if (parentNode === undefined){
         		parentNode = this.contentRoot;
-        		forceBindUI = true;
+        		forceBindUI = false;
         	}
         	      	
         	parentNode.appendChild(newNode);
