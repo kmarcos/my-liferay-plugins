@@ -3,12 +3,16 @@ AUI.add('rl-content-tree-view', function (A) {
 	A.namespace('Rivet');
 
 	var BOUNDING_BOX = 'boundingBox';
-	var NODE_SELECTOR = '.tree-node';
 	var TREE_NODE = 'tree-node';
+	var NODE_SELECTOR = '.'+TREE_NODE;
 	var PARENT_NODE = 'parentNode';
 	var NODE = 'node';
 	var NODE_ATTR_IS_FOLDER = 'isFolder';
 	var NODE_ATTR_FULL_LOADED = 'fullLoaded';
+	var TPT_DELIM_OPEN = '{{';
+	var TPT_DELIM_CLOSE = '}}';
+	var TPT_ENCODED_DELIM_OPEN = '&#x7b;&#x7b;';
+	var TPT_ENCODED_DELIM_CLOSE = '&#x7d;&#x7d;';
 	 
     A.Rivet.ContentTreeView = A.Base.create('rl-content-tree-view',A.Base, [], {
 
@@ -16,6 +20,9 @@ AUI.add('rl-content-tree-view', function (A) {
     	repository: null,
     	contentTree: null,
     	contentRoot : null,
+    	compiledEntryDetailTemplate: null,
+    	compiledItemSelectorTemplate: null,
+    	hiddenFieldsBox: null,
 
         initializer: function () {
         
@@ -24,10 +31,14 @@ AUI.add('rl-content-tree-view', function (A) {
         	
         	var instance = this;
         	var boundingBoxId = this.ns + this.get('treeBox');
+        	var hiddenBoundingBoxId = boundingBoxId + 'HiddenFields';
         	var folderId = this.get('rootFolderId');
         	var folderLabel = this.get('rootFolderLabel');
+        	var checkAllEntriesId = this.get('checkAllId');
         	
         	A.one('#'+this.ns+'entriesContainer').append('<div id="'+boundingBoxId+'"></div>');
+        	A.one('#'+this.ns+'entriesContainer').append('<div id="'+hiddenBoundingBoxId+'"></div>');
+        	this.hiddenFieldsBox =  A.one('#'+hiddenBoundingBoxId).hide();
         	
         	this.contentTree = new A.TreeViewDD(
         		      {
@@ -46,12 +57,12 @@ AUI.add('rl-content-tree-view', function (A) {
         		       		'drop:hit': A.bind(instance._afterDropHitRivetHandler,this)
         		       	},
         		       	on: {
-        		       		'drop:hit': A.bind(instance._dropHitRivetHandler,this),        		       		
-        		       	    lastSelectedChange: function(event){  
+        		       		'drop:hit': A.bind(instance._dropHitRivetHandler,this)
+        		       	    /*lastSelectedChange: function(event){  
         		       	      var id = event.newVal.get('id');  
         		       	      selected = id;  
         		       	      console.log ("selected "+id);
-        		       	    } 
+        		       	    } */
         		       	}
         		      }
         		    ).render();
@@ -62,7 +73,22 @@ AUI.add('rl-content-tree-view', function (A) {
         	
         	// Adding this event on this way because the click event seems on creations seems to be on tree level
         	var boundingBox = this.contentTree.get(BOUNDING_BOX);        	
-        	boundingBox.delegate('click', A.bind(instance._clickRivetHandler,this), NODE_SELECTOR);
+        	boundingBox.delegate('click', A.bind(instance._clickRivetHandler,this), NODE_SELECTOR); 
+
+        	// This is used to sync the selection from toolbar
+        	A.one('#'+this.ns+checkAllEntriesId+'Checkbox').on('click',A.bind(instance._selectAllHiddenCheckbox,this));
+        	
+        	//templates
+        	var entryDetailTemplate = A.one('#'+this.ns+'entry-details-template').get('innerHTML');
+        	var itemSelectorTemplate = A.one('#'+this.ns+'item-selector-template').get('innerHTML');
+        	
+        	// some template tokens get lost because encoding:
+        	itemSelectorTemplate = itemSelectorTemplate.replace(new RegExp(TPT_ENCODED_DELIM_OPEN, 'g'),TPT_DELIM_OPEN);
+        	itemSelectorTemplate = itemSelectorTemplate.replace(new RegExp(TPT_ENCODED_DELIM_CLOSE, 'g'),TPT_DELIM_CLOSE);
+        	
+            // compiles templates
+        	this.compiledEntryDetailTemplate = A.Handlebars.compile(entryDetailTemplate);
+            this.compiledItemSelectorTemplate = A.Handlebars.compile(itemSelectorTemplate);
         },
         
         addContentFolder: function(newNodeConfig, parentNode){
@@ -73,6 +99,7 @@ AUI.add('rl-content-tree-view', function (A) {
         addContentEntry: function(newNodeConfig, parentNode){
         	
         	this._addContentNode(newNodeConfig, parentNode, false, true);
+        	//this._addEntryDetail(newNodeConfig);
         },
         
         _dropHitRivetHandler: function(event){
@@ -182,9 +209,36 @@ AUI.add('rl-content-tree-view', function (A) {
         
         _clickRivetHandler: function(event){
 
-        	console.log('onclick handler');
         	event.stopPropagation();
+        	
+        	this._clickTreeNode(event);
+        	
+        	var isHitArea = event.target.hasClass('tree-hitarea');
+        	
+        	//If click is over label it change the check status. 
+        	// But it doesn't happen if it is the hit area.
+        	if (!isHitArea){
+        		this._clickCheckBox(event);
+        	}
+        },
+        
+        _clickCheckBox: function(event){
+        	
+        	console.log('click check box');
+        	
+        	var selectedNode = event.currentTarget.attr('id');
+        	
+        	var relatedCheckbox = this.hiddenFieldsBox.one('[type=checkbox][value='+selectedNode+']');
+        	
+        	if (relatedCheckbox !== null){        	
+        		relatedCheckbox.simulate("click");
+        	}
+        },
+        
+        _clickTreeNode: function(event){
 
+        	console.log('click tree node');
+        	
         	var treeNode = this.contentTree.getNodeById(event.currentTarget.attr('id'));
  
         	if (treeNode) {
@@ -199,7 +253,31 @@ AUI.add('rl-content-tree-view', function (A) {
             }
         },
         
-       _addContentNode: function(newNodeConfig, parentNode, isFolder, fullLoaded){       	  
+        _selectAllHiddenCheckbox: function(event){
+        	
+        	var checked = event.target.attr('checked');
+
+        	this.contentTree.get(BOUNDING_BOX).all('.tree-node-checkbox-container').each(function(node){
+        	  console.log(node);
+        	  var nodeChecked = node.one('[type=checkbox]').attr('checked');
+        	  if (nodeChecked !== checked){
+        		  node.simulate('click');
+        	  }
+        	});
+        },
+        
+       _addContentNode: function(newNodeConfig, parentNode, isFolder, fullLoaded){
+    	   
+    	   var forceBindUI = true;
+    	   var nodeType = '';
+    	   
+    	   if (parentNode === undefined){
+       			parentNode = this.contentRoot;
+       			forceBindUI = false;
+       			//Checkbox just in the first level
+       			nodeType = 'check';
+       		}
+    	   
         	var newNode = this.contentRoot.createNode(
 			  {
 			    id: newNodeConfig.id,
@@ -207,6 +285,7 @@ AUI.add('rl-content-tree-view', function (A) {
 			    draggable: true,
         		alwaysShowHitArea: true,
 			    leaf:!isFolder,
+			    type: nodeType,
         		expanded: false
 			  }
 			);
@@ -214,17 +293,43 @@ AUI.add('rl-content-tree-view', function (A) {
         	newNode.set(NODE_ATTR_IS_FOLDER, isFolder);
         	newNode.set(NODE_ATTR_FULL_LOADED, fullLoaded);
         	
-        	var forceBindUI = true;
-        	if (parentNode === undefined){
-        		parentNode = this.contentRoot;
-        		forceBindUI = false;
-        	}
+        	
         	      	
         	parentNode.appendChild(newNode);
         	
         	if (forceBindUI){
         		this.contentTree.bindUI();
         	}
+        	
+        	if (nodeType === 'check'){
+        		// add checkbox
+        		this._addProcessCheckbox(newNodeConfig);
+        	}
+        },
+        
+        _addProcessCheckbox: function(newNodeConfig){
+        	console.log("adding checkbox");
+        	console.log(newNodeConfig);
+        	//just for first level items
+        	if (newNodeConfig.rowCheckerId !== undefined){
+        		this.hiddenFieldsBox.append(this.compiledItemSelectorTemplate(newNodeConfig));
+        	}
+        },
+        
+        _addEntryDetail: function(entry){
+        	console.log('entry>');console.log(entry);
+        	
+            // data
+            var data = {
+                "title": entry.title,
+                "shortTitle": entry.title,
+                "linkTitle": entry.title + " - " + entry.description
+            };
+            data.count = 1;
+         
+           // finally, set the DOM
+           // A.one('.users-list').append(compiledEntryDetailTemplate(data));
+           // console.log(this.compiledEntryDetailTemplate(data));
         },
         
         _getChildren: function(treeNode, instance) {        	
@@ -241,7 +346,9 @@ AUI.add('rl-content-tree-view', function (A) {
 
            					instance.addContentFolder({
            						id : item.folderId.toString(),
-           						label: item.name
+           						label: item.name,
+           						title: item.title,
+           						description: item.description
            					},treeNode);
            				});
            			}
@@ -257,7 +364,7 @@ AUI.add('rl-content-tree-view', function (A) {
         			function(entries) {
         				
         				A.each(entries, function(item, index, collection){
-        					
+        					console.log('item:');console.log(item);
         					instance.addContentEntry({
         						id : item.fileEntryId.toString(),
         						label: item.title
@@ -303,10 +410,13 @@ AUI.add('rl-content-tree-view', function (A) {
             },
             rootFolderLabel:{
             	value: null
+            },
+            checkAllId:{
+            	value: null
             }
         }
     });
  
 }, '1.0.0', {
-    requires: ['aui-tree-view','json','liferay-portlet-url']
+    requires: ['aui-tree-view','json','liferay-portlet-url','handlebars']
 });

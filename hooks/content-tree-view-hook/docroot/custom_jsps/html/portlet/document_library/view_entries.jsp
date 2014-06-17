@@ -344,14 +344,19 @@ request.setAttribute("view_entries.jsp-entryEnd", String.valueOf(searchContainer
 </c:if>
 
 <%-- RivetLogic Custom BEGINS --%>
+
+<%@ include file="/html/portlet/document_library/item_details.jspf" %>
+<%@ include file="/html/portlet/document_library/item_selection.jspf" %>
+
 <c:if test='<%= displayStyle.equals(TREE_VIEW) %>'>
 
 <%
 	long treeFolderId = DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
-	String treeFolderTitle = LanguageUtil.get(pageContext, "home");
-	if (folder != null){
-	    treeFolderId = folder.getFolderId();
-	    treeFolderTitle = folder.getName();
+	String treeFolderTitle = LanguageUtil.get(pageContext, navigation);
+	if (folderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID){
+	    treeFolderId = folderId;
+	    Folder f = DLAppServiceUtil.getFolder(folderId);
+	    treeFolderTitle = f.getName();
 	}
 %>
 <aui:script use="rl-content-tree-view">
@@ -360,7 +365,6 @@ var TREE_CONTAINER = "treeDiv";
 var <portlet:namespace />treeViewNode = A.one('#<portlet:namespace />entriesContainer > #<portlet:namespace />'+TREE_CONTAINER);
 
 if (<portlet:namespace />treeViewNode == undefined){
-	console.log('creating tree');
 	
 	<portlet:namespace />treeView = new A.Rivet.ContentTreeView(
         	{
@@ -368,7 +372,8 @@ if (<portlet:namespace />treeViewNode == undefined){
         		treeBox: TREE_CONTAINER,
         		repositoryId: '<%= repositoryId %>',
         		rootFolderId:'<%= treeFolderId %>',
-        		rootFolderLabel: '<%= treeFolderTitle %>'
+        		rootFolderLabel: '<%= treeFolderTitle %>',
+        		checkAllId: '<%= RowChecker.ALL_ROW_IDS %>'
         	}
     );
 }
