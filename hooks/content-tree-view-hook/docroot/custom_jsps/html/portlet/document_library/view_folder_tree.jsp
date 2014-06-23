@@ -17,7 +17,10 @@ PortletURL tempRowURL = (PortletURL)request.getAttribute("view_entries.jsp-tempR
 		description: '<%=folder.getDescription() %>',
 		showCheckbox: '<%= DLFolderPermission.contains(permissionChecker, folder, ActionKeys.DELETE) || DLFolderPermission.contains(permissionChecker, folder, ActionKeys.UPDATE) %>',
 		rowCheckerId: '<%= String.valueOf(folder.getFolderId()) %>',
-		rowCheckerName: '<%= Folder.class.getSimpleName() %>'
+		rowCheckerName: '<%= Folder.class.getSimpleName() %>',
+		parentFolderId: '<%= folder.getParentFolderId() %>',
+		expanded : false,
+   		fullLoaded : false
 	});
 
 </aui:script>

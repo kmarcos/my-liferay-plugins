@@ -91,14 +91,15 @@ AUI.add('rl-content-tree-view', function (A) {
             this.compiledItemSelectorTemplate = A.Handlebars.compile(itemSelectorTemplate);
         },
         
-        addContentFolder: function(newNodeConfig, parentNode){
+        addContentFolder: function(newNodeConfig, parentNode){	
         	
-        	this._addContentNode(newNodeConfig, parentNode, true, false);
+        	this._addContentNode(newNodeConfig, parentNode, true);
         },
         
         addContentEntry: function(newNodeConfig, parentNode){
-        	
-        	this._addContentNode(newNodeConfig, parentNode, false, true);
+        	newNodeConfig.expanded = false;
+        	newNodeConfig.fullLoaded = true;
+        	this._addContentNode(newNodeConfig, parentNode, false);
         	//this._addEntryDetail(newNodeConfig);
         },
         
@@ -266,10 +267,14 @@ AUI.add('rl-content-tree-view', function (A) {
         	});
         },
         
-       _addContentNode: function(newNodeConfig, parentNode, isFolder, fullLoaded){
+       _addContentNode: function(newNodeConfig, parentNode, isFolder){
     	   
     	   var forceBindUI = true;
     	   var nodeType = '';
+    	   
+    	   if (parentNode === undefined && newNodeConfig.parentFolderId !== undefined){
+    		   parentNode = this.contentTree.getNodeById(newNodeConfig.parentFolderId);
+       	   }
     	   
     	   if (parentNode === undefined){
        			parentNode = this.contentRoot;
@@ -277,6 +282,8 @@ AUI.add('rl-content-tree-view', function (A) {
        			//Checkbox just in the first level
        			nodeType = 'check';
        		}
+    	   
+    	   var expanded = (newNodeConfig.expanded !== undefined)? newNodeConfig.expanded: false;
     	   
         	var newNode = this.contentRoot.createNode(
 			  {
@@ -286,15 +293,13 @@ AUI.add('rl-content-tree-view', function (A) {
         		alwaysShowHitArea: true,
 			    leaf:!isFolder,
 			    type: nodeType,
-        		expanded: false
+        		expanded: expanded
 			  }
 			);
         	
         	newNode.set(NODE_ATTR_IS_FOLDER, isFolder);
-        	newNode.set(NODE_ATTR_FULL_LOADED, fullLoaded);
-        	
-        	
-        	      	
+        	newNode.set(NODE_ATTR_FULL_LOADED, newNodeConfig.fullLoaded);
+      	      	
         	parentNode.appendChild(newNode);
         	
         	if (forceBindUI){
@@ -348,7 +353,9 @@ AUI.add('rl-content-tree-view', function (A) {
            						id : item.folderId.toString(),
            						label: item.name,
            						title: item.title,
-           						description: item.description
+           						description: item.description,
+           						expanded: false,
+           						fullLoaded : false
            					},treeNode);
            				});
            			}
@@ -367,7 +374,9 @@ AUI.add('rl-content-tree-view', function (A) {
         					console.log('item:');console.log(item);
         					instance.addContentEntry({
         						id : item.fileEntryId.toString(),
-        						label: item.title
+        						label: item.title,
+        						expanded: false,
+           						fullLoaded : true
         					},treeNode);
         				});
         			}
@@ -409,6 +418,12 @@ AUI.add('rl-content-tree-view', function (A) {
                 value: null
             },
             rootFolderLabel:{
+            	value: null
+            },
+            currentFolderId: {
+                value: null
+            },
+            currentFolderLabel:{
             	value: null
             },
             checkAllId:{

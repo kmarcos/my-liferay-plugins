@@ -31,6 +31,8 @@ if (fileShortcut != null) {
 	description: '<%= latestFileVersion.getDescription() %>',
 	showCheckbox: '<%= DLFileEntryPermission.contains(permissionChecker, fileEntry, ActionKeys.DELETE) || DLFileEntryPermission.contains(permissionChecker, fileEntry, ActionKeys.UPDATE) %>',
 	rowCheckerId: '<%= String.valueOf(rowCheckerId) %>',
-	rowCheckerName: '<%= rowCheckerName %>'
+	rowCheckerName: '<%= rowCheckerName %>',
+	parentFolderId: '<%= fileEntry.getFolderId() %>'
 });
+
 </aui:script>

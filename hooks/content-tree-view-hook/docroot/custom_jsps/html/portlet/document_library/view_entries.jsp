@@ -351,12 +351,37 @@ request.setAttribute("view_entries.jsp-entryEnd", String.valueOf(searchContainer
 <c:if test='<%= displayStyle.equals(TREE_VIEW) %>'>
 
 <%
+
+	List<Long> ancestorIds = new ArrayList<Long>();
+
+	// Root will be always the same (home)
 	long treeFolderId = DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
 	String treeFolderTitle = LanguageUtil.get(pageContext, navigation);
+	
+	// Current folder could be different to root
+	long currFolderId = treeFolderId;
+	String currFolderTitle = treeFolderTitle;
+	
 	if (folderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID){
-	    treeFolderId = folderId;
-	    Folder f = DLAppServiceUtil.getFolder(folderId);
-	    treeFolderTitle = f.getName();
+	    
+	    Folder currFolder = DLAppServiceUtil.getFolder(folderId);
+	    currFolderId = folderId;
+	    currFolderTitle = currFolder.getName(); 
+	    
+	 	// We need get all ancestors util root
+	    List<Folder> ancestors = currFolder.getAncestors();
+	 	
+	 	// We are simulating the root folder as an ancestor
+	 	ancestorIds.add(DLFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+	 	
+	 	java.util.ListIterator li = ancestors.listIterator(ancestors.size());
+		 // Iterate in reverse
+		 while(li.hasPrevious()) {
+		     Folder f = (Folder) li.previous();
+		     ancestorIds.add(f.getFolderId());
+		 }
+	 	
+		 
 	}
 %>
 <aui:script use="rl-content-tree-view">
@@ -373,10 +398,74 @@ if (<portlet:namespace />treeViewNode == undefined){
         		repositoryId: '<%= repositoryId %>',
         		rootFolderId:'<%= treeFolderId %>',
         		rootFolderLabel: '<%= treeFolderTitle %>',
+        		currentFolderId:'<%= currFolderId %>',
+        		currentFolderLabel: '<%= currFolderTitle %>',
         		checkAllId: '<%= RowChecker.ALL_ROW_IDS %>'
         	}
     );
 }
+
+<% 
+	// If current folder is not root (home)
+	if (currFolderId != treeFolderId){
+     
+	 	// Add ancestors' children 
+        for (Long ancestorId:  ancestorIds){ 
+            
+            // Folders
+		    List<Folder> cFolders = DLAppServiceUtil.getFolders(repositoryId, ancestorId);		    
+		    
+		    for (Folder cFolder: cFolders){
+		        boolean isAncestor = false;
+			    if ( (cFolder.getFolderId() == currFolderId ) || (ancestorIds.contains(cFolder.getFolderId())) ){
+			       isAncestor = true;
+			    }
+	        	%>
+		    	<portlet:namespace />treeView.addContentFolder({
+					id: '<%= cFolder.getFolderId() %>',
+					label: '<%= cFolder.getName() %>',
+					title: '<%= cFolder.getName() %>',
+					description: '<%= cFolder.getDescription() %>',
+					showCheckbox: '<%= DLFolderPermission.contains(permissionChecker, cFolder, ActionKeys.DELETE) || DLFolderPermission.contains(permissionChecker, cFolder, ActionKeys.UPDATE) %>',
+					rowCheckerId: '<%= String.valueOf(cFolder.getFolderId()) %>',
+					rowCheckerName: '<%= Folder.class.getSimpleName() %>',
+					parentFolderId: '<%= cFolder.getParentFolderId() %>',
+					expanded : <%= isAncestor %>,
+   			    	fullLoaded : <%= isAncestor %>
+				});
+		    	<%		 
+		    }
+		    
+		    // Files
+		    List<FileEntry> cFiles = DLAppServiceUtil.getFileEntries(repositoryId, ancestorId);	
+		    
+		    for (FileEntry cFileEntry: cFiles){
+		         
+		        FileVersion latestFileVersion = cFileEntry.getFileVersion();
+		        String rowCheckerName = FileEntry.class.getSimpleName();
+		        long rowCheckerId = cFileEntry.getFileEntryId();
+		        DLFileShortcut fileShortcut = (DLFileShortcut)request.getAttribute("view_entries.jsp-fileShortcut");
+		        if (fileShortcut != null) {
+		        	rowCheckerName = DLFileShortcut.class.getSimpleName();
+		        	rowCheckerId = fileShortcut.getFileShortcutId();
+		        }
+		        
+		        %>
+		        <portlet:namespace />treeView.addContentEntry({
+		        	id : '<%= latestFileVersion.getFileEntryId() %>',
+		        	label: '<%= latestFileVersion.getTitle() %>',
+		        	title: '<%= latestFileVersion.getTitle() %>',
+		        	description: '<%= latestFileVersion.getDescription() %>',
+		        	showCheckbox: '<%= DLFileEntryPermission.contains(permissionChecker, cFileEntry, ActionKeys.DELETE) || DLFileEntryPermission.contains(permissionChecker, cFileEntry, ActionKeys.UPDATE) %>',
+		        	rowCheckerId: '<%= String.valueOf(rowCheckerId) %>',
+		        	rowCheckerName: '<%= rowCheckerName %>',
+		        	parentFolderId: '<%= cFileEntry.getFolderId() %>'
+		        });
+		        <%
+		    }
+		}
+	}
+%>
 
 </aui:script>
 </c:if>
