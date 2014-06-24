@@ -13,11 +13,14 @@ AUI.add('rl-content-tree-view', function (A) {
 	var TPT_DELIM_CLOSE = '}}';
 	var TPT_ENCODED_DELIM_OPEN = '&#x7b;&#x7b;';
 	var TPT_ENCODED_DELIM_CLOSE = '&#x7d;&#x7d;';
+	var WORKFLOW_STATUS_ANY = -1;
+	//var FOLER_CLASS_NAME = 'com.liferay.portlet.documentlibrary.model.DLFolder';
 	 
     A.Rivet.ContentTreeView = A.Base.create('rl-content-tree-view',A.Base, [], {
 
     	ns : null,
     	repository: null,
+    	scopeGroup: null,
     	contentTree: null,
     	contentRoot : null,
     	compiledEntryDetailTemplate: null,
@@ -28,6 +31,7 @@ AUI.add('rl-content-tree-view', function (A) {
         
         	this.ns = this.get('namespace');
         	this.repository = this.get('repositoryId');
+        	this.scopeGroup = this.get('scopeGroupId');
         	
         	var instance = this;
         	var boundingBoxId = this.ns + this.get('treeBox');
@@ -276,11 +280,12 @@ AUI.add('rl-content-tree-view', function (A) {
     		   parentNode = this.contentTree.getNodeById(newNodeConfig.parentFolderId);
        	   }
     	   
+    	   if (newNodeConfig.showCheckbox){
+    		   nodeType = 'check';
+    	   }
+    	   
     	   if (parentNode === undefined){
        			parentNode = this.contentRoot;
-       			forceBindUI = false;
-       			//Checkbox just in the first level
-       			nodeType = 'check';
        		}
     	   
     	   var expanded = (newNodeConfig.expanded !== undefined)? newNodeConfig.expanded: false;
@@ -341,46 +346,45 @@ AUI.add('rl-content-tree-view', function (A) {
         	   
         	// Get folders children of this folder
         	Liferay.Service(
-           			'/dlapp/get-folders',
+           			'/dlapp/get-folders-and-file-entries-and-file-shortcuts',
            			{
            				repositoryId: instance.repository,
-           				parentFolderId: treeNode.get('id')
+           				folderId: treeNode.get('id'),
+           				status: WORKFLOW_STATUS_ANY,
+           				includeMountFolders :true,
+        				start: -1,
+        				end: -1
            			},
            			function(folders) {
-           				A.each(folders, function(item, index, collection){    
-
-           					instance.addContentFolder({
-           						id : item.folderId.toString(),
-           						label: item.name,
-           						title: item.title,
-           						description: item.description,
-           						expanded: false,
-           						fullLoaded : false
-           					},treeNode);
+           				A.each(folders, function(item, index, collection){
+           					
+           					//if it is a file entry
+           					if (item.fileEntryId !== undefined){
+           						console.log('file entry:');console.log(item);
+            					instance.addContentEntry({
+            						id : item.fileEntryId.toString(),
+            						label: item.title,
+            						expanded: false,
+               						fullLoaded : true
+            					},treeNode);
+           					}
+           					//If it is a folder
+           					else{
+           						console.log('folder:');console.log(item);
+           						
+           						
+	           					instance.addContentFolder({
+	           						id : item.folderId.toString(),
+	           						label: item.name,
+	           						title: item.title,
+	           						description: item.description,
+	           						expanded: false,
+	           						fullLoaded : false
+	           					},treeNode);
+           					}
            				});
            			}
            		);
-        	
-        	// Get entries children of this folder
-        	Liferay.Service(
-        			'/dlapp/get-file-entries',
-        			{
-        				repositoryId: instance.repository,
-        				folderId: treeNode.get('id')
-        			},
-        			function(entries) {
-        				
-        				A.each(entries, function(item, index, collection){
-        					console.log('item:');console.log(item);
-        					instance.addContentEntry({
-        						id : item.fileEntryId.toString(),
-        						label: item.title,
-        						expanded: false,
-           						fullLoaded : true
-        					},treeNode);
-        				});
-        			}
-        	);
         	   
         	treeNode.set(NODE_ATTR_FULL_LOADED, true);
         	treeNode.expand();
@@ -412,6 +416,9 @@ AUI.add('rl-content-tree-view', function (A) {
         		value: null
         	},
         	repositoryId:{
+        		value: null
+        	},
+        	scopeGroupId:{
         		value: null
         	},
             rootFolderId: {

@@ -396,6 +396,7 @@ if (<portlet:namespace />treeViewNode == undefined){
         		namespace: '<portlet:namespace />',
         		treeBox: TREE_CONTAINER,
         		repositoryId: '<%= repositoryId %>',
+        		scopeGroupId: '<%= scopeGroupId %>',
         		rootFolderId:'<%= treeFolderId %>',
         		rootFolderLabel: '<%= treeFolderTitle %>',
         		currentFolderId:'<%= currFolderId %>',
