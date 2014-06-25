@@ -346,7 +346,7 @@ AUI.add('rl-content-tree-view', function (A) {
         	   
         	// Get folders children of this folder
         	Liferay.Service(
-           			'/dlapp/get-folders-and-file-entries-and-file-shortcuts',
+           			'/content-tree-view-hook.enhanceddlapp/get-folders-and-file-entries-and-file-shortcuts',
            			{
            				repositoryId: instance.repository,
            				folderId: treeNode.get('id'),
@@ -361,23 +361,23 @@ AUI.add('rl-content-tree-view', function (A) {
            					//if it is a file entry
            					if (item.fileEntryId !== undefined){
            						console.log('file entry:');console.log(item);
+           						checkbox = (item.deletePermission);
             					instance.addContentEntry({
             						id : item.fileEntryId.toString(),
             						label: item.title,
+            						showCheckbox: checkbox,
             						expanded: false,
-               						fullLoaded : true
+               						fullLoaded : true               						
             					},treeNode);
            					}
            					//If it is a folder
            					else{
-           						console.log('folder:');console.log(item);
-           						
-           						
+           						console.log('folder:');console.log(item);           						
+           						checkbox = (item.updatePermission);
 	           					instance.addContentFolder({
 	           						id : item.folderId.toString(),
 	           						label: item.name,
-	           						title: item.title,
-	           						description: item.description,
+	           						showCheckbox: checkbox,
 	           						expanded: false,
 	           						fullLoaded : false
 	           					},treeNode);
