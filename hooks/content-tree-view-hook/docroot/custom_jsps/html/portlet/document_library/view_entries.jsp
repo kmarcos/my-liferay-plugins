@@ -347,6 +347,7 @@ request.setAttribute("view_entries.jsp-entryEnd", String.valueOf(searchContainer
 
 <%@ include file="/html/portlet/document_library/item_details.jspf" %>
 <%@ include file="/html/portlet/document_library/item_selection.jspf" %>
+<%@ include file="/html/portlet/document_library/item_preview.jspf" %>
 
 <c:if test='<%= displayStyle.equals(TREE_VIEW) %>'>
 

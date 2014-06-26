@@ -16,10 +16,21 @@ package com.rivetlogic.tree.view.service.impl;
 
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.security.permission.ActionKeys;
+import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portlet.documentlibrary.service.DLAppServiceUtil;
+import com.liferay.portlet.documentlibrary.util.AudioProcessorUtil;
+import com.liferay.portlet.documentlibrary.util.DLProcessorRegistryUtil;
+import com.liferay.portlet.documentlibrary.util.DLUtil;
+import com.liferay.portlet.documentlibrary.util.ImageProcessorUtil;
+import com.liferay.portlet.documentlibrary.util.PDFProcessorUtil;
+import com.liferay.portlet.documentlibrary.util.VideoProcessorUtil;
 import com.rivetlogic.tree.view.model.DLFileEntry;
 import com.rivetlogic.tree.view.model.DLFolder;
 import com.rivetlogic.tree.view.service.base.EnhancedDLAppServiceBaseImpl;
@@ -53,6 +64,8 @@ public class EnhancedDLAppServiceImpl extends EnhancedDLAppServiceBaseImpl {
      * com.rivetlogic.tree.view.service.EnhancedDLAppServiceUtil} to access the
      * enhanced d l app remote service.
      */
+    
+    private static final Log log = LogFactoryUtil.getLog(EnhancedDLAppServiceImpl.class);
 
     public List<Object> getFoldersAndFileEntriesAndFileShortcuts(long repositoryId, long folderId, int status,
             boolean includeMountFolders, int start, int end) throws PortalException, SystemException {
@@ -79,9 +92,125 @@ public class EnhancedDLAppServiceImpl extends EnhancedDLAppServiceBaseImpl {
                 dlFileEntry
                         .setUpdatePermission(fileEntry.containsPermission(getPermissionChecker(), ActionKeys.UPDATE));
                 results.add(dlFileEntry);
+                
+                setPreviewDataForEntry( fileEntry, dlFileEntry);
             }
         }
 
         return results;
+    }
+    
+    /**
+     * This logic was taken from html/portlet/document_library/view_file_entry.jsp
+     * under <c:if test="<%= PropsValues.DL_FILE_ENTRY_PREVIEW_ENABLED %>">
+     * It is also replicated in hook file preview_query.jspf
+     * @param fileEntry
+     * @param dlFileEntry
+     */
+    private void setPreviewDataForEntry( FileEntry fileEntry, DLFileEntry dlFileEntry){
+        
+        ThemeDisplay themeDisplay  = null;
+        FileVersion latestFileVersion;
+        
+        try {
+            latestFileVersion = fileEntry.getLatestFileVersion();
+        } catch (Exception e) {
+            log.error(e);
+            return;
+        } 
+        
+        dlFileEntry.setHasAudio(AudioProcessorUtil.hasAudio(latestFileVersion));
+        dlFileEntry.setHasImages(ImageProcessorUtil.hasImages(latestFileVersion));
+        dlFileEntry.setHasPDFImages(PDFProcessorUtil.hasImages(latestFileVersion));
+        dlFileEntry.setHasVideo(VideoProcessorUtil.hasVideo(latestFileVersion));
+
+        int previewFileCount = 0;
+        String previewFileURL = null;
+        String[] previewFileURLs = null;
+        String videoThumbnailURL = null;
+        
+        String previewQueryString = null;
+        
+        if (dlFileEntry.isHasAudio()) {
+            previewQueryString = "&audioPreview=1";
+        }
+        else if (dlFileEntry.isHasImages()) {
+            previewQueryString = "&imagePreview=1";
+        }
+        else if (dlFileEntry.isHasPDFImages()) {
+            previewFileCount = PDFProcessorUtil.getPreviewFileCount(latestFileVersion);
+        
+            previewQueryString = "&previewFileIndex=";
+        
+            previewFileURL = DLUtil.getPreviewURL(fileEntry, latestFileVersion, themeDisplay, previewQueryString);
+        }
+        else if (dlFileEntry.isHasVideo()) {
+            previewQueryString = "&videoPreview=1";
+        
+            videoThumbnailURL = DLUtil.getPreviewURL(fileEntry, latestFileVersion, themeDisplay, "&videoThumbnail=1");
+        }
+        
+        if (Validator.isNotNull(previewQueryString)) {
+            if (dlFileEntry.isHasAudio()) {
+                previewFileURLs = new String[PropsValues.DL_FILE_ENTRY_PREVIEW_AUDIO_CONTAINERS.length];
+        
+                for (int i = 0; i < PropsValues.DL_FILE_ENTRY_PREVIEW_AUDIO_CONTAINERS.length; i++) {
+                    previewFileURLs[i] = DLUtil.getPreviewURL(fileEntry, latestFileVersion, themeDisplay, previewQueryString + "&type=" + PropsValues.DL_FILE_ENTRY_PREVIEW_AUDIO_CONTAINERS[i]);
+                }
+            }
+            else if (dlFileEntry.isHasVideo()) {
+                if (PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_CONTAINERS.length > 0) {
+                    previewFileURLs = new String[PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_CONTAINERS.length];
+        
+                    for (int i = 0; i < PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_CONTAINERS.length; i++) {
+                        previewFileURLs[i] = DLUtil.getPreviewURL(fileEntry, latestFileVersion, themeDisplay, previewQueryString + "&type=" + PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_CONTAINERS[i]);
+                    }
+                }
+                else {
+                    previewFileURLs = new String[1];
+        
+                    previewFileURLs[0] = videoThumbnailURL;
+                }
+            }
+            else {
+                previewFileURLs = new String[1];
+        
+                previewFileURLs[0] = DLUtil.getPreviewURL(fileEntry, latestFileVersion, themeDisplay, previewQueryString);
+            }
+        
+            previewFileURL = previewFileURLs[0];
+        
+            if (!dlFileEntry.isHasPDFImages()) {
+                previewFileCount = 1;
+            }
+            
+            dlFileEntry.setPreviewFileCount(previewFileCount);
+            dlFileEntry.setPreviewFileURL(previewFileURL);
+            dlFileEntry.setNoPreviewGeneration(noPreviewGeneration(latestFileVersion));
+            dlFileEntry.setPreviewWillTakeTime(previewWillTakeTime(latestFileVersion));
+        }
+   
+    }
+    
+    /**
+     * This logic was taken from html/portlet/document_library/view_file_entry.jsp
+     * is the condition tested for print <liferay-ui:message key="file-is-too-large-for-preview-or-thumbnail-generation" />
+     * It is also replicated in hook file preview_query.jspf
+     * @param fileVersion
+     * @return true if is no Preview Generation for this file version. otherwise false.
+     */
+    private boolean noPreviewGeneration(FileVersion fileVersion){
+        return !DLProcessorRegistryUtil.isPreviewableSize(fileVersion) && (AudioProcessorUtil.isAudioSupported(fileVersion.getMimeType()) || ImageProcessorUtil.isImageSupported(fileVersion.getMimeType()) || PDFProcessorUtil.isDocumentSupported(fileVersion.getMimeType()) || VideoProcessorUtil.isVideoSupported(fileVersion.getMimeType()));
+    }
+    
+    /**
+     * This logic was taken from html/portlet/document_library/view_file_entry.jsp
+     * is the condition tested for print <liferay-ui:message key="generating-preview-will-take-a-few-minutes" />
+     * It is also replicated in hook file preview_query.jspf
+     * @param fileVersion
+     * @return true if Preview is not ready yet for this file version. otherwise false.
+     */
+    private boolean previewWillTakeTime(FileVersion fileVersion){
+        return AudioProcessorUtil.isAudioSupported(fileVersion) || ImageProcessorUtil.isImageSupported(fileVersion) || PDFProcessorUtil.isDocumentSupported(fileVersion) || VideoProcessorUtil.isVideoSupported(fileVersion);
     }
 }

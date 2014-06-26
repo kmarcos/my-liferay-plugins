@@ -9,6 +9,15 @@ AUI.add('rl-content-tree-view', function (A) {
 	var NODE = 'node';
 	var NODE_ATTR_IS_FOLDER = 'isFolder';
 	var NODE_ATTR_FULL_LOADED = 'fullLoaded';
+	var NODE_ATTR_PREVIEW_DIV_PREF = 'previewTreeDiv';
+	var NODE_ATTR_PREVIEW_OBJECT = 'previewObject';
+	var NODE_ATTR_PREVIEW_URL = 'previewURL';
+	var NODE_ATTR_PREVIEW_FILE_COUNT = 'previewFileCount';
+	var NODE_ATTR_HAS_AUDIO = 'hasAudio';
+	var NODE_ATTR_HAS_VIDEO = 'hasVideo';
+	var NODE_ATTR_HAS_IMAGES = 'hasImages';
+	var NODE_ATTR_NO_PREVIEW_GENERATION = 'noPreviewGeneration';
+	var NODE_ATTR_PREVIEW_WILL_TAKE_TIME = 'previewWillTakeTime';
 	var TPT_DELIM_OPEN = '{{';
 	var TPT_DELIM_CLOSE = '}}';
 	var TPT_ENCODED_DELIM_OPEN = '&#x7b;&#x7b;';
@@ -25,7 +34,9 @@ AUI.add('rl-content-tree-view', function (A) {
     	contentRoot : null,
     	compiledEntryDetailTemplate: null,
     	compiledItemSelectorTemplate: null,
+    	compiledPreviewItemSelectorTemplate: null,
     	hiddenFieldsBox: null,
+    	previewBoundingBox: null,
 
         initializer: function () {
         
@@ -36,13 +47,16 @@ AUI.add('rl-content-tree-view', function (A) {
         	var instance = this;
         	var boundingBoxId = this.ns + this.get('treeBox');
         	var hiddenBoundingBoxId = boundingBoxId + 'HiddenFields';
+        	var previewBoundingBoxId = boundingBoxId + 'Preview';
         	var folderId = this.get('rootFolderId');
         	var folderLabel = this.get('rootFolderLabel');
         	var checkAllEntriesId = this.get('checkAllId');
         	
+        	A.one('#'+this.ns+'entriesContainer').append('<div id="'+previewBoundingBoxId+'"></div>');
         	A.one('#'+this.ns+'entriesContainer').append('<div id="'+boundingBoxId+'"></div>');
         	A.one('#'+this.ns+'entriesContainer').append('<div id="'+hiddenBoundingBoxId+'"></div>');
         	this.hiddenFieldsBox =  A.one('#'+hiddenBoundingBoxId).hide();
+        	this.previewBoundingBox = A.one('#'+previewBoundingBoxId);
         	
         	this.contentTree = new A.TreeViewDD(
         		      {
@@ -85,6 +99,7 @@ AUI.add('rl-content-tree-view', function (A) {
         	//templates
         	var entryDetailTemplate = A.one('#'+this.ns+'entry-details-template').get('innerHTML');
         	var itemSelectorTemplate = A.one('#'+this.ns+'item-selector-template').get('innerHTML');
+        	var previewTemplate = A.one('#'+this.ns+'item-preview-template').get('innerHTML');
         	
         	// some template tokens get lost because encoding:
         	itemSelectorTemplate = itemSelectorTemplate.replace(new RegExp(TPT_ENCODED_DELIM_OPEN, 'g'),TPT_DELIM_OPEN);
@@ -93,6 +108,7 @@ AUI.add('rl-content-tree-view', function (A) {
             // compiles templates
         	this.compiledEntryDetailTemplate = A.Handlebars.compile(entryDetailTemplate);
             this.compiledItemSelectorTemplate = A.Handlebars.compile(itemSelectorTemplate);
+            this.compiledPreviewItemSelectorTemplate = A.Handlebars.compile(previewTemplate);
         },
         
         addContentFolder: function(newNodeConfig, parentNode){	
@@ -224,7 +240,58 @@ AUI.add('rl-content-tree-view', function (A) {
         	// But it doesn't happen if it is the hit area.
         	if (!isHitArea){
         		this._clickCheckBox(event);
+        		this._showPreview(event);
         	}
+        },
+        
+        _showPreview: function(event){
+        	var treeNode = this.contentTree.getNodeById(event.currentTarget.attr('id'));
+        	var previewURL = treeNode.get(NODE_ATTR_PREVIEW_URL);
+        	var preview = treeNode.get(NODE_ATTR_PREVIEW_OBJECT);
+        	if (!preview && previewURL !== undefined){
+        		preview = this._createPreview(treeNode);
+        	}       	
+        },
+        
+        _createPreview: function(treeNode){
+               	
+        	console.log('preview url '+treeNode.get(NODE_ATTR_PREVIEW_URL));
+        	console.log('preview url '+treeNode.get(NODE_ATTR_PREVIEW_FILE_COUNT));
+        	
+        	var previewDivId = this.ns + NODE_ATTR_PREVIEW_DIV_PREF + treeNode.get('id');
+        	
+        	this.previewBoundingBox.append(this.compiledPreviewItemSelectorTemplate(
+        				{
+        					previewDivId: previewDivId,
+        					previewFileCount: treeNode.get(NODE_ATTR_PREVIEW_FILE_COUNT),
+        					previewURL: treeNode.get(NODE_ATTR_PREVIEW_URL),
+        					noPreviewGeneration: treeNode.get(NODE_ATTR_NO_PREVIEW_GENERATION),
+        					previewWillTakeTime: treeNode.get(NODE_ATTR_PREVIEW_WILL_TAKE_TIME),
+        					hasAudio: treeNode.get(NODE_ATTR_HAS_AUDIO),
+        					hasImages: treeNode.get(NODE_ATTR_HAS_IMAGES),
+        					hasVideo: treeNode.get(NODE_ATTR_HAS_VIDEO)
+        				}
+        			));
+        	
+        	var pvDivSelector = '#'+ previewDivId + '  #'+ this.ns ;
+        	
+        	var preview = new Liferay.Preview(
+					{
+						actionContent: pvDivSelector + 'previewFileActions',
+						baseImageURL: treeNode.get(NODE_ATTR_PREVIEW_URL),
+						boundingBox: pvDivSelector + 'previewFile',
+						contentBox: pvDivSelector + 'previewFileContent',
+						currentPreviewImage: pvDivSelector + 'previewFileImage',
+						imageListContent: pvDivSelector + 'previewImagesContent',
+						maxIndex: treeNode.get(NODE_ATTR_PREVIEW_FILE_COUNT), 
+						previewFileIndexNode: pvDivSelector + 'previewFileIndex',
+						toolbar: pvDivSelector + 'previewToolbar'
+					}
+				);
+        	
+        	treeNode.set(NODE_ATTR_PREVIEW_OBJECT, preview);
+        	
+        	preview.render();
         },
         
         _clickCheckBox: function(event){
@@ -304,6 +371,16 @@ AUI.add('rl-content-tree-view', function (A) {
         	
         	newNode.set(NODE_ATTR_IS_FOLDER, isFolder);
         	newNode.set(NODE_ATTR_FULL_LOADED, newNodeConfig.fullLoaded);
+        	
+        	if (newNodeConfig.previewURL !== undefined){
+        		newNode.set(NODE_ATTR_PREVIEW_URL, newNodeConfig.previewURL);
+        		newNode.set(NODE_ATTR_PREVIEW_FILE_COUNT, newNodeConfig.previewFileCount);
+        		newNode.set(NODE_ATTR_HAS_AUDIO, newNodeConfig.hasAudio);
+        		newNode.set(NODE_ATTR_HAS_VIDEO, newNodeConfig.hasVideo);
+        		newNode.set(NODE_ATTR_HAS_IMAGES, newNodeConfig.hasImages);
+        		newNode.set(NODE_ATTR_NO_PREVIEW_GENERATION, newNodeConfig.noPreviewGeneration);
+        		newNode.set(NODE_ATTR_PREVIEW_WILL_TAKE_TIME, newNodeConfig.previewWillTakeTime);
+        	}
       	      	
         	parentNode.appendChild(newNode);
         	
@@ -367,7 +444,14 @@ AUI.add('rl-content-tree-view', function (A) {
             						label: item.title,
             						showCheckbox: checkbox,
             						expanded: false,
-               						fullLoaded : true               						
+               						fullLoaded : true,
+               						previewURL: item.previewFileURL,
+               						previewFileCount: item.previewFileCount,
+               						noPreviewGeneration: item.noPreviewGeneration,
+               						previewWillTakeTime: item.previewWillTakeTime,
+               						hasAudio: item.hasAudio,
+               						hasImages: item.hasImages,
+               						hasVideo: item.hasVideo
             					},treeNode);
            					}
            					//If it is a folder
@@ -440,5 +524,5 @@ AUI.add('rl-content-tree-view', function (A) {
     });
  
 }, '1.0.0', {
-    requires: ['aui-tree-view','json','liferay-portlet-url','handlebars']
+    requires: ['aui-tree-view','json','liferay-portlet-url','handlebars', 'liferay-preview']
 });

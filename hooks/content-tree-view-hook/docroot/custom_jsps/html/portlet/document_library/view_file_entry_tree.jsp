@@ -22,6 +22,10 @@ if (fileShortcut != null) {
 }
 %>
 
+<%@ include file="/html/portlet/document_library/preview_query.jspf" %>
+
+<% System.out.println("previewFileURL> "+previewFileURL); %>
+
 <aui:script use="rl-content-tree-view">
 
 <portlet:namespace />treeView.addContentEntry({
@@ -32,7 +36,14 @@ if (fileShortcut != null) {
 	showCheckbox: '<%= DLFileEntryPermission.contains(permissionChecker, fileEntry, ActionKeys.DELETE) || DLFileEntryPermission.contains(permissionChecker, fileEntry, ActionKeys.UPDATE) %>',
 	rowCheckerId: '<%= String.valueOf(rowCheckerId) %>',
 	rowCheckerName: '<%= rowCheckerName %>',
-	parentFolderId: '<%= fileEntry.getFolderId() %>'
+	parentFolderId: '<%= fileEntry.getFolderId() %>',
+	previewURL:'<%= previewFileURL %>',
+	previewFileCount: <%= previewFileCount %>,
+	noPreviewGeneration: <%= noPreviewGeneration %>,
+	previewWillTakeTime: <%= previewWillTakeTime %>,
+	hasAudio: <%= hasAudio %>,
+	hasImages: <%= hasImages %>,
+	hasVideo: <%= hasVideo %>
 });
 
 </aui:script>
