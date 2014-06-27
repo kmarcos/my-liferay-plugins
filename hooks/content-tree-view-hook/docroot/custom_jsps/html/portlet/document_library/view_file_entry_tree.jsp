@@ -38,12 +38,7 @@ if (fileShortcut != null) {
 	rowCheckerName: '<%= rowCheckerName %>',
 	parentFolderId: '<%= fileEntry.getFolderId() %>',
 	previewURL:'<%= previewFileURL %>',
-	previewFileCount: <%= previewFileCount %>,
-	noPreviewGeneration: <%= noPreviewGeneration %>,
-	previewWillTakeTime: <%= previewWillTakeTime %>,
-	hasAudio: <%= hasAudio %>,
-	hasImages: <%= hasImages %>,
-	hasVideo: <%= hasVideo %>
+	previewFileCount: <%= previewFileCount %>
 });
 
 </aui:script>

@@ -16,12 +16,6 @@ public class DLFileEntry implements Serializable {
     private boolean deletePermission;
     private boolean updatePermission;
     /* for preview */
-    private boolean noPreviewGeneration;
-    private boolean previewWillTakeTime;
-    private boolean hasAudio;
-    private boolean hasImages;
-    private boolean hasVideo;
-    private boolean hasPDFImages;
     private int previewFileCount;
     private String previewFileURL;
 
@@ -98,54 +92,6 @@ public class DLFileEntry implements Serializable {
 
     public void setUpdatePermission(boolean updatePermission) {
         this.updatePermission = updatePermission;
-    }
-
-    public boolean isNoPreviewGeneration() {
-        return noPreviewGeneration;
-    }
-
-    public void setNoPreviewGeneration(boolean noPreviewGeneration) {
-        this.noPreviewGeneration = noPreviewGeneration;
-    }
-
-    public boolean isPreviewWillTakeTime() {
-        return previewWillTakeTime;
-    }
-
-    public void setPreviewWillTakeTime(boolean previewWillTakeTime) {
-        this.previewWillTakeTime = previewWillTakeTime;
-    }
-
-    public boolean isHasAudio() {
-        return hasAudio;
-    }
-
-    public void setHasAudio(boolean hasAudio) {
-        this.hasAudio = hasAudio;
-    }
-
-    public boolean isHasImages() {
-        return hasImages;
-    }
-
-    public void setHasImages(boolean hasImages) {
-        this.hasImages = hasImages;
-    }
-
-    public boolean isHasVideo() {
-        return hasVideo;
-    }
-
-    public void setHasVideo(boolean hasVideo) {
-        this.hasVideo = hasVideo;
-    }
-
-    public boolean isHasPDFImages() {
-        return hasPDFImages;
-    }
-
-    public void setHasPDFImages(boolean hasPDFImages) {
-        this.hasPDFImages = hasPDFImages;
     }
 
     public int getPreviewFileCount() {

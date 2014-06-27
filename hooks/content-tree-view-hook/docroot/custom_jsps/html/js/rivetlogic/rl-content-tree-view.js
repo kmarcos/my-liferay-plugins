@@ -9,21 +9,16 @@ AUI.add('rl-content-tree-view', function (A) {
 	var NODE = 'node';
 	var NODE_ATTR_IS_FOLDER = 'isFolder';
 	var NODE_ATTR_FULL_LOADED = 'fullLoaded';
-	var NODE_ATTR_PREVIEW_DIV_PREF = 'previewTreeDiv';
-	var NODE_ATTR_PREVIEW_OBJECT = 'previewObject';
+	var NODE_ATTR_PREVIEW_IMG_PREF = 'pvTreeImage';
+	var NODE_ATTR_PREVIEW_IMG_NODE = 'previewNode';
 	var NODE_ATTR_PREVIEW_URL = 'previewURL';
 	var NODE_ATTR_PREVIEW_FILE_COUNT = 'previewFileCount';
-	var NODE_ATTR_HAS_AUDIO = 'hasAudio';
-	var NODE_ATTR_HAS_VIDEO = 'hasVideo';
-	var NODE_ATTR_HAS_IMAGES = 'hasImages';
-	var NODE_ATTR_NO_PREVIEW_GENERATION = 'noPreviewGeneration';
-	var NODE_ATTR_PREVIEW_WILL_TAKE_TIME = 'previewWillTakeTime';
 	var TPT_DELIM_OPEN = '{{';
 	var TPT_DELIM_CLOSE = '}}';
 	var TPT_ENCODED_DELIM_OPEN = '&#x7b;&#x7b;';
 	var TPT_ENCODED_DELIM_CLOSE = '&#x7d;&#x7d;';
+	var TPL_PREVIEW_NODE = '<img src="{previewFileURL}" id="{imgId}" class="treePreviewImg"/>';
 	var WORKFLOW_STATUS_ANY = -1;
-	//var FOLER_CLASS_NAME = 'com.liferay.portlet.documentlibrary.model.DLFolder';
 	 
     A.Rivet.ContentTreeView = A.Base.create('rl-content-tree-view',A.Base, [], {
 
@@ -32,9 +27,7 @@ AUI.add('rl-content-tree-view', function (A) {
     	scopeGroup: null,
     	contentTree: null,
     	contentRoot : null,
-    	compiledEntryDetailTemplate: null,
     	compiledItemSelectorTemplate: null,
-    	compiledPreviewItemSelectorTemplate: null,
     	hiddenFieldsBox: null,
     	previewBoundingBox: null,
 
@@ -52,9 +45,10 @@ AUI.add('rl-content-tree-view', function (A) {
         	var folderLabel = this.get('rootFolderLabel');
         	var checkAllEntriesId = this.get('checkAllId');
         	
-        	A.one('#'+this.ns+'entriesContainer').append('<div id="'+previewBoundingBoxId+'"></div>');
+        	A.one('#'+this.ns+'entriesContainer').append('<div id="'+previewBoundingBoxId+'" class="rl-tree-preview"></div>');
         	A.one('#'+this.ns+'entriesContainer').append('<div id="'+boundingBoxId+'"></div>');
         	A.one('#'+this.ns+'entriesContainer').append('<div id="'+hiddenBoundingBoxId+'"></div>');
+        	
         	this.hiddenFieldsBox =  A.one('#'+hiddenBoundingBoxId).hide();
         	this.previewBoundingBox = A.one('#'+previewBoundingBoxId);
         	
@@ -72,10 +66,10 @@ AUI.add('rl-content-tree-view', function (A) {
         		        	}
         		       	],
         		       	after: {
-        		       		'drop:hit': A.bind(instance._afterDropHitRivetHandler,this)
+        		       		'drop:hit': A.bind(instance._afterDropHitHandler,this)
         		       	},
         		       	on: {
-        		       		'drop:hit': A.bind(instance._dropHitRivetHandler,this)
+        		       		'drop:hit': A.bind(instance._dropHitHandler,this)
         		       	    /*lastSelectedChange: function(event){  
         		       	      var id = event.newVal.get('id');  
         		       	      selected = id;  
@@ -89,26 +83,23 @@ AUI.add('rl-content-tree-view', function (A) {
         	this.contentRoot.set(NODE_ATTR_IS_FOLDER, true);
         	this.contentRoot.set(NODE_ATTR_FULL_LOADED, true);
         	
-        	// Adding this event on this way because the click event seems on creations seems to be on tree level
+        	// Adding this event on this way because the click event seems on creation seems to be on tree level
         	var boundingBox = this.contentTree.get(BOUNDING_BOX);        	
-        	boundingBox.delegate('click', A.bind(instance._clickRivetHandler,this), NODE_SELECTOR); 
+        	boundingBox.delegate('click', A.bind(instance._clickHandler,this), NODE_SELECTOR); 
+        	boundingBox.delegate('mouseover', A.bind(instance._mouseOverHandler,this), NODE_SELECTOR); 
 
         	// This is used to sync the selection from toolbar
         	A.one('#'+this.ns+checkAllEntriesId+'Checkbox').on('click',A.bind(instance._selectAllHiddenCheckbox,this));
         	
-        	//templates
-        	var entryDetailTemplate = A.one('#'+this.ns+'entry-details-template').get('innerHTML');
+        	//template
         	var itemSelectorTemplate = A.one('#'+this.ns+'item-selector-template').get('innerHTML');
-        	var previewTemplate = A.one('#'+this.ns+'item-preview-template').get('innerHTML');
         	
         	// some template tokens get lost because encoding:
         	itemSelectorTemplate = itemSelectorTemplate.replace(new RegExp(TPT_ENCODED_DELIM_OPEN, 'g'),TPT_DELIM_OPEN);
         	itemSelectorTemplate = itemSelectorTemplate.replace(new RegExp(TPT_ENCODED_DELIM_CLOSE, 'g'),TPT_DELIM_CLOSE);
         	
-            // compiles templates
-        	this.compiledEntryDetailTemplate = A.Handlebars.compile(entryDetailTemplate);
+            // compiles template
             this.compiledItemSelectorTemplate = A.Handlebars.compile(itemSelectorTemplate);
-            this.compiledPreviewItemSelectorTemplate = A.Handlebars.compile(previewTemplate);
         },
         
         addContentFolder: function(newNodeConfig, parentNode){	
@@ -123,7 +114,7 @@ AUI.add('rl-content-tree-view', function (A) {
         	//this._addEntryDetail(newNodeConfig);
         },
         
-        _dropHitRivetHandler: function(event){
+        _dropHitHandler: function(event){
         	
         	var dragNode = event.drag.get(NODE).get(PARENT_NODE);
             var dragTreeNode = dragNode.getData(TREE_NODE);
@@ -133,7 +124,7 @@ AUI.add('rl-content-tree-view', function (A) {
             this._moveContentNode(dragTreeNode,dropTreeNode);
             	
         },
-        _afterDropHitRivetHandler: function(event){
+        _afterDropHitHandler: function(event){
         	
         	console.log('after drop hit');console.log(event);
         	
@@ -149,14 +140,7 @@ AUI.add('rl-content-tree-view', function (A) {
     			this._getChildren(dropTreeNode, this);
     		}
             	
-        },
-        
-        _dropOverRivetHandler: function(event){
-        	var dropNode = event.drop.get(NODE).get(PARENT_NODE);
-        	console.log('dropNode');console.log(dropNode);
-            var dropTreeNode = dropNode.getData(TREE_NODE);
-            console.log('dropTreeNode');console.log(dropTreeNode);
-        },
+        },       
         
         _moveContentNode: function(node, target){
         	
@@ -228,7 +212,7 @@ AUI.add('rl-content-tree-view', function (A) {
         	);
         },
         
-        _clickRivetHandler: function(event){
+        _clickHandler: function(event){
 
         	event.stopPropagation();
         	
@@ -239,59 +223,44 @@ AUI.add('rl-content-tree-view', function (A) {
         	//If click is over label it change the check status. 
         	// But it doesn't happen if it is the hit area.
         	if (!isHitArea){
-        		this._clickCheckBox(event);
-        		this._showPreview(event);
+        		this._clickCheckBox(event);        		
         	}
         },
         
-        _showPreview: function(event){
-        	var treeNode = this.contentTree.getNodeById(event.currentTarget.attr('id'));
-        	var previewURL = treeNode.get(NODE_ATTR_PREVIEW_URL);
-        	var preview = treeNode.get(NODE_ATTR_PREVIEW_OBJECT);
-        	if (!preview && previewURL !== undefined){
-        		preview = this._createPreview(treeNode);
-        	}       	
+        _mouseOverHandler: function(event){
+        	event.stopPropagation();
+        	console.log(event);
+        	var treeNode = this.contentTree.getNodeById(event.currentTarget.get('id'));
+        	this._showPreview(treeNode);
+        },
+        
+        _showPreview: function(treeNode){
+        	
+        	this.previewBoundingBox.empty();
+        	
+        	if (!this._isFolder(treeNode)){
+	        	var previewURL = treeNode.get(NODE_ATTR_PREVIEW_URL);
+	        	var previewImgNode = treeNode.get(NODE_ATTR_PREVIEW_IMG_NODE);
+	        	if (!previewImgNode && previewURL !== undefined){
+	        		previewImgNode = this._createPreview(treeNode);
+	        	}       	
+	        	this.previewBoundingBox.append(previewImgNode);
+        	}
         },
         
         _createPreview: function(treeNode){
                	
         	console.log('preview url '+treeNode.get(NODE_ATTR_PREVIEW_URL));
-        	console.log('preview url '+treeNode.get(NODE_ATTR_PREVIEW_FILE_COUNT));
+        	console.log('preview file count '+treeNode.get(NODE_ATTR_PREVIEW_FILE_COUNT));
         	
-        	var previewDivId = this.ns + NODE_ATTR_PREVIEW_DIV_PREF + treeNode.get('id');
+        	var previewImgId = this.ns + NODE_ATTR_PREVIEW_IMG_PREF + treeNode.get('id');
+        	var previewURL = treeNode.get(NODE_ATTR_PREVIEW_URL);
+       	    
+        	var previewNode = A.Lang.sub(TPL_PREVIEW_NODE, {"imgId":previewImgId,"previewFileURL":previewURL});
         	
-        	this.previewBoundingBox.append(this.compiledPreviewItemSelectorTemplate(
-        				{
-        					previewDivId: previewDivId,
-        					previewFileCount: treeNode.get(NODE_ATTR_PREVIEW_FILE_COUNT),
-        					previewURL: treeNode.get(NODE_ATTR_PREVIEW_URL),
-        					noPreviewGeneration: treeNode.get(NODE_ATTR_NO_PREVIEW_GENERATION),
-        					previewWillTakeTime: treeNode.get(NODE_ATTR_PREVIEW_WILL_TAKE_TIME),
-        					hasAudio: treeNode.get(NODE_ATTR_HAS_AUDIO),
-        					hasImages: treeNode.get(NODE_ATTR_HAS_IMAGES),
-        					hasVideo: treeNode.get(NODE_ATTR_HAS_VIDEO)
-        				}
-        			));
+        	treeNode.set(NODE_ATTR_PREVIEW_IMG_NODE, previewNode);
         	
-        	var pvDivSelector = '#'+ previewDivId + '  #'+ this.ns ;
-        	
-        	var preview = new Liferay.Preview(
-					{
-						actionContent: pvDivSelector + 'previewFileActions',
-						baseImageURL: treeNode.get(NODE_ATTR_PREVIEW_URL),
-						boundingBox: pvDivSelector + 'previewFile',
-						contentBox: pvDivSelector + 'previewFileContent',
-						currentPreviewImage: pvDivSelector + 'previewFileImage',
-						imageListContent: pvDivSelector + 'previewImagesContent',
-						maxIndex: treeNode.get(NODE_ATTR_PREVIEW_FILE_COUNT), 
-						previewFileIndexNode: pvDivSelector + 'previewFileIndex',
-						toolbar: pvDivSelector + 'previewToolbar'
-					}
-				);
-        	
-        	treeNode.set(NODE_ATTR_PREVIEW_OBJECT, preview);
-        	
-        	preview.render();
+        	return previewNode;
         },
         
         _clickCheckBox: function(event){
@@ -375,11 +344,6 @@ AUI.add('rl-content-tree-view', function (A) {
         	if (newNodeConfig.previewURL !== undefined){
         		newNode.set(NODE_ATTR_PREVIEW_URL, newNodeConfig.previewURL);
         		newNode.set(NODE_ATTR_PREVIEW_FILE_COUNT, newNodeConfig.previewFileCount);
-        		newNode.set(NODE_ATTR_HAS_AUDIO, newNodeConfig.hasAudio);
-        		newNode.set(NODE_ATTR_HAS_VIDEO, newNodeConfig.hasVideo);
-        		newNode.set(NODE_ATTR_HAS_IMAGES, newNodeConfig.hasImages);
-        		newNode.set(NODE_ATTR_NO_PREVIEW_GENERATION, newNodeConfig.noPreviewGeneration);
-        		newNode.set(NODE_ATTR_PREVIEW_WILL_TAKE_TIME, newNodeConfig.previewWillTakeTime);
         	}
       	      	
         	parentNode.appendChild(newNode);

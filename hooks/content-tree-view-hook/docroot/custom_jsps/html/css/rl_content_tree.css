@@ -1,0 +1,8 @@
+.document-container .rl-tree-preview {
+	
+	background: url(@theme_image_path@/common/checkerboard.png);
+    float: right;
+    height: 80%;
+    width: 40%;
+    padding: 20px;
+}

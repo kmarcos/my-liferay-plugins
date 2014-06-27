@@ -21,6 +21,17 @@
 	displayViews = displayViewsAugmented;
 %>
 
+<style>
+	.document-container .rl-tree-preview {
+		
+		background: url(<%= themeDisplay.getPathThemeImages() %>/common/checkerboard.png);
+	    float: right;
+	    height: 400px;
+	    width: 40%;
+	    padding: 20px;
+	}
+</style>
+
 <aui:script>                   
 AUI().applyConfig({
     groups : {
