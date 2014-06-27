@@ -29,6 +29,7 @@
 	    height: 400px;
 	    width: 40%;
 	    padding: 20px;
+	    text-align:center;
 	}
 </style>
 

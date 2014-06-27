@@ -350,6 +350,10 @@ request.setAttribute("view_entries.jsp-entryEnd", String.valueOf(searchContainer
 <c:if test='<%= displayStyle.equals(TREE_VIEW) %>'>
 
 <%
+	// Base URL for view file entry
+	PortletURL viewFileEntryURL = liferayPortletResponse.createRenderURL();
+	viewFileEntryURL.setParameter("struts_action", "/document_library/view_file_entry");
+	viewFileEntryURL.setParameter("redirect", HttpUtil.removeParameter(currentURL, liferayPortletResponse.getNamespace() + "ajax"));
 
 	List<Long> ancestorIds = new ArrayList<Long>();
 
@@ -378,9 +382,7 @@ request.setAttribute("view_entries.jsp-entryEnd", String.valueOf(searchContainer
 		 while(li.hasPrevious()) {
 		     Folder f = (Folder) li.previous();
 		     ancestorIds.add(f.getFolderId());
-		 }
-	 	
-		 
+		 }	 
 	}
 %>
 <aui:script use="rl-content-tree-view">
@@ -398,13 +400,11 @@ if (<portlet:namespace />treeViewNode == undefined){
         		scopeGroupId: '<%= scopeGroupId %>',
         		rootFolderId:'<%= treeFolderId %>',
         		rootFolderLabel: '<%= treeFolderTitle %>',
-        		currentFolderId:'<%= currFolderId %>',
-        		currentFolderLabel: '<%= currFolderTitle %>',
-        		checkAllId: '<%= RowChecker.ALL_ROW_IDS %>'
+        		checkAllId: '<%= RowChecker.ALL_ROW_IDS %>',
+        		fileEntryBaseURL: '<%=viewFileEntryURL %>'
         	}
     );
 }
-
 <% 
 	// If current folder is not root (home)
 	if (currFolderId != treeFolderId){

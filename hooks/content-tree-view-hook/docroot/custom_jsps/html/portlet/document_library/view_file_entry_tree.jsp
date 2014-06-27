@@ -24,8 +24,6 @@ if (fileShortcut != null) {
 
 <%@ include file="/html/portlet/document_library/preview_query.jspf" %>
 
-<% System.out.println("previewFileURL> "+previewFileURL); %>
-
 <aui:script use="rl-content-tree-view">
 
 <portlet:namespace />treeView.addContentEntry({
@@ -38,7 +36,7 @@ if (fileShortcut != null) {
 	rowCheckerName: '<%= rowCheckerName %>',
 	parentFolderId: '<%= fileEntry.getFolderId() %>',
 	previewURL:'<%= previewFileURL %>',
-	previewFileCount: <%= previewFileCount %>
+	previewFileCount: <%= previewFileCount %>,
+	viewURL: '<%= tempRowURL %>'
 });
-
 </aui:script>

@@ -139,7 +139,8 @@ public class EnhancedDLAppServiceImpl extends EnhancedDLAppServiceBaseImpl {
         } else if (hasPDFImages) {
             previewFileCount = PDFProcessorUtil.getPreviewFileCount(latestFileVersion);
 
-            previewQueryString = "&previewFileIndex=1"; // number one is added here. It was originally in the html
+            // number one is added here. It was originally in the html
+            previewQueryString = "&previewFileIndex=1";
 
             previewFileURL = DLUtil.getPreviewURL(fileEntry, latestFileVersion, themeDisplay, previewQueryString);
         } else if (hasVideo) {
@@ -185,6 +186,5 @@ public class EnhancedDLAppServiceImpl extends EnhancedDLAppServiceBaseImpl {
             dlFileEntry.setPreviewFileCount(previewFileCount);
             dlFileEntry.setPreviewFileURL(previewFileURL);
         }
-
     }
 }
