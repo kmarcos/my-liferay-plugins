@@ -85,7 +85,7 @@ AUI.add('rl-content-tree-view', function (A) {
         	boundingBox.delegate('click', A.bind(instance._clickHandler,this), NODE_SELECTOR); 
         	boundingBox.delegate('mouseover', A.bind(instance._mouseOverHandler,this), NODE_SELECTOR); 
 
-        	// This is used to sync the selection from toolbar
+        	// This is used to manage the selection from toolbar
         	A.one('#'+this.ns+checkAllEntriesId+'Checkbox').on('click',A.bind(instance._selectAllHiddenCheckbox,this));
         	
         	//template
@@ -188,7 +188,7 @@ AUI.add('rl-content-tree-view', function (A) {
         	var isItemName = event.target.hasClass('tree-label');
         	
         	if (isHitArea){
-        		this._clickTreeNode(event);
+        		this._clickHitArea(event);
         	}
         	
         	//If click is over label it change the check status. 
@@ -223,10 +223,8 @@ AUI.add('rl-content-tree-view', function (A) {
 			Liferay.Util.getOpener().location.href = viewURL.toString();
         },
         
-        _showPreview: function(treeNode){
-        	
-        	this.previewBoundingBox.empty();
-        	
+        _showPreview: function(treeNode){       	
+        	this.previewBoundingBox.empty();        	
         	if (!this._isFolder(treeNode)){
 	        	var previewURL = treeNode.get(NODE_ATTR_PREVIEW_URL);
 	        	var previewImgNode = treeNode.get(NODE_ATTR_PREVIEW_IMG_NODE);
@@ -246,14 +244,127 @@ AUI.add('rl-content-tree-view', function (A) {
         },
         
         _clickCheckBox: function(event){
-        	var selectedNode = event.currentTarget.attr('id');        	
-        	var relatedCheckbox = this.hiddenFieldsBox.one('[type=checkbox][value='+selectedNode+']');        	
-        	if (relatedCheckbox !== null){        	
-        		relatedCheckbox.simulate("click");
+        	var selectedNodeId = event.currentTarget.attr('id');       	 
+        	var treeNode = this.contentTree.getNodeById(selectedNodeId);
+        	console.log(treeNode);
+        	var parentNode =treeNode.get('parentNode');
+        	console.log(parentNode);
+        	var checked = true;
+        	var deep = true;
+        	var fullCheck = false;
+        	 
+        	// If node has a parent different to root (root doesn't have checkbox)
+        	if (parentNode.isChecked !== undefined){
+        	 
+        		//TODO ancestor instead of parents
+        	 	// If node is unchecked and it's parent is checked, all ancestors should be unchecked
+        		 if (!treeNode.isChecked() && parentNode.isChecked()){
+        			 console.log("uncheck parent on tree and form");
+        			 // Uncheck parent on tree and form
+        			 this._clickBothCheckbox(parentNode, !checked);
+
+        			 // In the form, after parent is unchecked, checked children should be added
+        			 console.log("check all checked siblings in form");
+        			 parentNode.eachChildren(function(sibling){
+        				 if (sibling.get('id') !== selectedNodeId ){
+        					 this._clickFormHiddenCheckBox(sibling, checked);
+        				 }
+        				 else{
+        					 console.log ('its the original one');
+        				 }		 
+        			 });        			 
+        		 }
+        		 
+        	 	 // If node is checked and all it's siblings are checked, parent should be checked also
+        		 else if (treeNode.isChecked() && !parentNode.isChecked()){
+        			 var allSiblingsChecked = true;
+        			 parentNode.eachChildren(function(sibling){
+	        				 console.log('sibling '+sibling.get('id'));
+	        				 console.log(sibling);
+	        				 if (sibling.get('id') !== selectedNodeId ){
+	        					 if (!sibling.isChecked()){
+	        						 allSiblingsChecked = false;
+	        					 }
+	        				 }
+	        				 else{
+	        					 console.log ('its the same');
+	        				 }
+    				 });        			 
+        			 if (allSiblingsChecked){ 
+	        			 console.log("check parent on tree and form ");
+	        			 this._clickBothCheckbox(parentNode, checked);
+	        			 // children should be shown as check but no added in the form
+	        			 console.log("uncheck all children in form");
+	        			 parentNode.eachChildren(function(sibling){
+	        				 if (sibling.get('id') !== selectedNodeId ){
+	        					 this._clickFormHiddenCheckBox(sibling, !checked);
+	        				 }
+	        				 else{
+	        					 console.log ('its the original one');
+	        				 }		 
+	        			 });  	        			 
+        			 }
+        			 else{
+        				 fullCheck = true;
+        			 }
+        		 }
+        		 // Rest of cases treeNode is not affecting parent status,
+        		 // the treeNode should be checked in tree and form (full check)
+        		 else{
+        			 
+        			 fullCheck = true;
+        		 }        		 
+        	 }
+        	
+        	// If tree node has not parent, or it has one, but is not affecting parent'status
+        	if (parentNode.isChecked === undefined || fullCheck){
+        		console.log('fullcheck');
+        		this._clickBothCheckbox(treeNode, checked);
+        	}
+        	 
+        	// If node has children (folder)
+        	if (treeNode.getChildrenLength()){
+        	 	// If node is checked must check all its descendents (just tree view, not in form)
+        		if (treeNode.isChecked()){
+        			console.log('check all descendent on tree not in form');
+        			treeNode.eachChildren(function(child){
+        				this._clickFormHiddenCheckBox(child, checked);	 
+        			}, deep);
+        		}        	 
+        	    // If node is unchecked must uncheck all its descendets 
+        		// (in tree view not in form because they should'nt be checked)
+        		if (!treeNode.isChecked()){
+        			console.log('uncheck check all descendents on tree not in form');
+        			treeNode.eachChildren(function(child){
+        				this._clickTreeCheckbox(child, !checked);	 
+        			}, deep);
+        		}
         	}
         },
         
-        _clickTreeNode: function(event){
+        _clickFormHiddenCheckBox: function(node, checked){
+        	var selectedNodeId = node.get('id');
+        	var relatedCheckbox = this.hiddenFieldsBox.one('[type=checkbox][value='+selectedNodeId+']');        	
+        	if ((relatedCheckbox !== null) && (relatedCheckbox.attr('checked') !== checked)){        	
+        		relatedCheckbox.simulate("click");
+        	}
+        },
+
+        _clickTreeCheckbox: function(node, checked){
+        	if (node){
+	        	if (node.isChecked() === checked){
+	        		//node.simulate('click');
+	        		node.check();
+	        	}
+        	}
+        },
+        
+        _clickBothCheckbox: function(node, checked){
+        	this._clickFormHiddenCheckBox(node, checked);
+        	this._clickTreeCheckbox(node, checked);        	
+        },
+               
+        _clickHitArea: function(event){
         	var treeNode = this.contentTree.getNodeById(event.currentTarget.attr('id')); 
         	if (treeNode) {
         		if (!(this._isFullLoaded(treeNode))){
@@ -269,12 +380,16 @@ AUI.add('rl-content-tree-view', function (A) {
         _selectAllHiddenCheckbox: function(event){
         	var checked = event.target.attr('checked');
         	this.contentTree.get(BOUNDING_BOX).all('.tree-node-checkbox-container').each(function(node){
+        		console.log("node in checkbox "+node.attr('id'));
+        		console.log(node);
         	  var nodeChecked = node.one('[type=checkbox]').attr('checked');
         	  if (nodeChecked !== checked){
-        		  node.simulate('click');
+        		  //node.simulate('click');
         	  }
         	});
         },
+        
+       
         
        _addContentNode: function(newNodeConfig, parentNode, isFolder){
     	   var forceBindUI = true;
@@ -317,10 +432,7 @@ AUI.add('rl-content-tree-view', function (A) {
         },
         
         _addProcessCheckbox: function(newNodeConfig){
-        	//just for first level items
-        	if (newNodeConfig.rowCheckerId !== undefined){
-        		this.hiddenFieldsBox.append(this.compiledItemSelectorTemplate(newNodeConfig));
-        	}
+    		this.hiddenFieldsBox.append(this.compiledItemSelectorTemplate(newNodeConfig));
         },
 
         _getChildren: function(treeNode, instance) {        	   
