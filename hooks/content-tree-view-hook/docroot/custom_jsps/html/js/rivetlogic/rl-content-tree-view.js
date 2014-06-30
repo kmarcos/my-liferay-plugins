@@ -148,9 +148,6 @@ AUI.add('rl-content-tree-view', function (A) {
 	        	else{
 	        		this._moveContentEntry(node, target);
 	        	}
-        	}
-        	else{
-        		console.log("no moved because is the same target folder");
         	}       	        	
         },
         
@@ -186,6 +183,32 @@ AUI.add('rl-content-tree-view', function (A) {
         	);
         },
         
+        _mouseOverHandler: function(event){
+        	event.stopPropagation();
+        	var treeNode = this.contentTree.getNodeById(event.currentTarget.get('id'));
+        	this._showPreview(treeNode);
+        },
+        
+        _goToFileEntryViewPage: function(event){
+        	event.stopPropagation();
+        	var treeNode = this.contentTree.getNodeById(event.currentTarget.get('id'));
+			var viewURL = Liferay.PortletURL.createURL(this.fileEntryBaseURL);
+			viewURL.setParameter("fileEntryId", treeNode.get('id'));
+			Liferay.Util.getOpener().location.href = viewURL.toString();
+        },
+        
+        _showPreview: function(treeNode){       	
+        	this.previewBoundingBox.empty();        	
+        	if (!this._isFolder(treeNode)){
+	        	var previewURL = treeNode.get(NODE_ATTR_PREVIEW_URL);
+	        	var previewImgNode = treeNode.get(NODE_ATTR_PREVIEW_IMG_NODE);
+	        	if (!previewImgNode && previewURL !== undefined){
+	        		previewImgNode = this._createPreview(treeNode);
+	        	}       	
+	        	this.previewBoundingBox.append(previewImgNode);
+        	}
+        },      
+        
         _clickHandler: function(event){
 
         	event.stopPropagation();
@@ -216,32 +239,6 @@ AUI.add('rl-content-tree-view', function (A) {
         	
         },
         
-        _mouseOverHandler: function(event){
-        	event.stopPropagation();
-        	var treeNode = this.contentTree.getNodeById(event.currentTarget.get('id'));
-        	this._showPreview(treeNode);
-        },
-        
-        _goToFileEntryViewPage: function(event){
-        	event.stopPropagation();
-        	var treeNode = this.contentTree.getNodeById(event.currentTarget.get('id'));
-			var viewURL = Liferay.PortletURL.createURL(this.fileEntryBaseURL);
-			viewURL.setParameter("fileEntryId", treeNode.get('id'));
-			Liferay.Util.getOpener().location.href = viewURL.toString();
-        },
-        
-        _showPreview: function(treeNode){       	
-        	this.previewBoundingBox.empty();        	
-        	if (!this._isFolder(treeNode)){
-	        	var previewURL = treeNode.get(NODE_ATTR_PREVIEW_URL);
-	        	var previewImgNode = treeNode.get(NODE_ATTR_PREVIEW_IMG_NODE);
-	        	if (!previewImgNode && previewURL !== undefined){
-	        		previewImgNode = this._createPreview(treeNode);
-	        	}       	
-	        	this.previewBoundingBox.append(previewImgNode);
-        	}
-        },
-        
         _createPreview: function(treeNode){        	
         	var previewImgId = this.ns + NODE_ATTR_PREVIEW_IMG_PREF + treeNode.get('id');
         	var previewURL = treeNode.get(NODE_ATTR_PREVIEW_URL);      	    
@@ -251,124 +248,12 @@ AUI.add('rl-content-tree-view', function (A) {
         },
         
         _clickCheckBox: function(event){
-        	var selectedNodeId = event.currentTarget.attr('id');       	 
-        	var treeNode = this.contentTree.getNodeById(selectedNodeId);
-        	console.log(treeNode);
-        	var parentNode =treeNode.get('parentNode');
-        	console.log(parentNode);
-        	var checked = true;
-        	var deep = true;
-        	var fullCheck = false;
-        	 
-        	// If node has a parent different to root (root doesn't have checkbox)
-        	if (parentNode.isChecked !== undefined){
-        	 
-        		//TODO ancestor instead of parents eachParent
-        	 	// If node is unchecked and it's parent is checked, all ancestors should be unchecked
-        		 if (!treeNode.isChecked() && parentNode.isChecked()){
-        			 console.log("uncheck parent on tree and form");
-        			 // Uncheck parent on tree and form
-        			 this._clickBothCheckbox(parentNode, !checked);
-
-        			 // In the form, after parent is unchecked, checked children should be added
-        			 console.log("check all checked siblings in form");
-        			 parentNode.eachChildren(function(sibling){
-        				 if (sibling.get('id') !== selectedNodeId ){
-        					 this._clickFormHiddenCheckBox(sibling, checked);
-        				 }
-        				 else{
-        					 console.log ('its the original one');
-        				 }		 
-        			 });        			 
-        		 }
-        		 
-        	 	 // If node is checked and all it's siblings are checked, parent should be checked also
-        		 else if (treeNode.isChecked() && !parentNode.isChecked()){
-        			 var allSiblingsChecked = true;
-        			 parentNode.eachChildren(function(sibling){
-	        				 console.log('sibling '+sibling.get('id'));
-	        				 console.log(sibling);
-	        				 if (sibling.get('id') !== selectedNodeId ){
-	        					 if (!sibling.isChecked()){
-	        						 allSiblingsChecked = false;
-	        					 }
-	        				 }
-	        				 else{
-	        					 console.log ('its the same');
-	        				 }
-    				 });        			 
-        			 if (allSiblingsChecked){ 
-	        			 console.log("check parent on tree and form ");
-	        			 this._clickBothCheckbox(parentNode, checked);
-	        			 // children should be shown as check but no added in the form
-	        			 console.log("uncheck all children in form");
-	        			 parentNode.eachChildren(function(sibling){
-	        				 if (sibling.get('id') !== selectedNodeId ){
-	        					 this._clickFormHiddenCheckBox(sibling, !checked);
-	        				 }
-	        				 else{
-	        					 console.log ('its the original one');
-	        				 }		 
-	        			 });  	        			 
-        			 }
-        			 else{
-        				 fullCheck = true;
-        			 }
-        		 }
-        		 // Rest of cases treeNode is not affecting parent status,
-        		 // the treeNode should be checked in tree and form (full check)
-        		 else{
-        			 
-        			 fullCheck = true;
-        		 }        		 
-        	 }
-        	
-        	// If tree node has not parent, or it has one, but is not affecting parent'status
-        	if (parentNode.isChecked === undefined || fullCheck){
-        		console.log('fullcheck');
-        		this._clickBothCheckbox(treeNode, checked);
-        	}
-        	 
-        	// If node has children (folder)
-        	if (treeNode.getChildrenLength()){
-        	 	// If node is checked must check all its descendents (just tree view, not in form)
-        		if (treeNode.isChecked()){
-        			console.log('check all descendent on tree not in form');
-        			treeNode.eachChildren(function(child){
-        				this._clickFormHiddenCheckBox(child, checked);	 
-        			}, deep);
-        		}        	 
-        	    // If node is unchecked must uncheck all its descendets 
-        		// (in tree view not in form because they should'nt be checked)
-        		if (!treeNode.isChecked()){
-        			console.log('uncheck check all descendents on tree not in form');
-        			treeNode.eachChildren(function(child){
-        				this._clickTreeCheckbox(child, !checked);	 
-        			}, deep);
-        		}
-        	}
-        },
-        
-        _clickFormHiddenCheckBox: function(node, checked){
-        	var selectedNodeId = node.get('id');
+        	var selectedNodeId = event.currentTarget.attr('id');
         	var relatedCheckbox = this.hiddenFieldsBox.one('[type=checkbox][value='+selectedNodeId+']');        	
-        	if ((relatedCheckbox !== null) && (relatedCheckbox.attr('checked') !== checked)){        	
+        	if (relatedCheckbox !== null){
         		relatedCheckbox.simulate("click");
         	}
-        },
-
-        _clickTreeCheckbox: function(node, checked){
-        	if (node){
-	        	if (node.isChecked() !== checked){
-	        		//node.simulate('click');
-	        		node.check();
-	        	}
-        	}
-        },
-        
-        _clickBothCheckbox: function(node, checked){
-        	this._clickFormHiddenCheckBox(node, checked);
-        	this._clickTreeCheckbox(node, checked);        	
+        	 
         },
                
         _clickHitArea: function(event){
@@ -387,17 +272,13 @@ AUI.add('rl-content-tree-view', function (A) {
         _selectAllHiddenCheckbox: function(event){
         	var checked = event.target.attr('checked');
         	this.contentTree.get(BOUNDING_BOX).all('.tree-node-checkbox-container').each(function(node){
-        		console.log("node in checkbox "+node.attr('id'));
-        		console.log(node);
-        	  var nodeChecked = node.one('[type=checkbox]').attr('checked');
-        	  if (nodeChecked !== checked){
-        		  //node.simulate('click');
+        	var nodeChecked = node.one('[type=checkbox]').attr('checked');
+        	if (nodeChecked !== checked){
+        		  node.simulate('click');
         	  }
         	});
         },
-        
-       
-        
+                    
        _addContentNode: function(newNodeConfig, parentNode, isFolder){
     	   var forceBindUI = true;
     	   var nodeType = '';
@@ -455,9 +336,7 @@ AUI.add('rl-content-tree-view', function (A) {
         				end: -1
            			},
            			function(folders) {
-           				A.each(folders, function(item, index, collection){ 
-           					console.log("item");
-           					console.log(item);
+           				A.each(folders, function(item, index, collection){
            					var enableCheckbox = (item.deletePermission || item.updatePermission);
            					//if it is a file entry
            					if (item.fileEntryId !== undefined){           						
@@ -466,9 +345,9 @@ AUI.add('rl-content-tree-view', function (A) {
             						label: item.title,
             						showCheckbox: enableCheckbox,
             						rowCheckerId: item.fileEntryId.toString(),
-        							rowCheckerName: this.folderCheckerName,
+        							rowCheckerName: instance.fileEntryCheckerName,
             						expanded: false,
-               						fullLoaded : true,
+               						fullLoaded: true,
                						previewURL: item.previewFileURL,
                						previewFileCount: item.previewFileCount,
             					},treeNode);
@@ -481,9 +360,9 @@ AUI.add('rl-content-tree-view', function (A) {
 	           						label: item.name,
 	           						showCheckbox: enableCheckbox,
 	           						rowCheckerId: item.folderId.toString(),
-        							rowCheckerName:  this.fileEntryCheckerName,
+        							rowCheckerName: instance.folderCheckerName,
 	           						expanded: false,
-	           						fullLoaded : false
+	           						fullLoaded: false
 	           					},treeNode);
            					}
            				});

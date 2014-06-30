@@ -402,9 +402,9 @@ if (<portlet:namespace />treeViewNode == undefined){
         		rootFolderLabel: '<%= treeFolderTitle %>',
         		checkAllId: '<%= RowChecker.ALL_ROW_IDS %>',
         		fileEntryBaseURL: '<%=viewFileEntryURL %>',
-        		fileEntryCheckerName: '<%=FileEntry.class.getSimpleName()  %>',
-        		folderCheckerName: '<%=FileEntry.class.getSimpleName()  %>',
-        		shortcutCheckerName: '<%=FileEntry.class.getSimpleName()  %>'
+        		fileEntryCheckerName: '<%= FileEntry.class.getSimpleName() %>',
+        		folderCheckerName: '<%= Folder.class.getSimpleName() %>',
+        		shortcutCheckerName: '<%= DLFileShortcut.class.getSimpleName() %>'
         	}
     );
 }
