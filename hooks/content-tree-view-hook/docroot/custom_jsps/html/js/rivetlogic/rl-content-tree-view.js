@@ -31,6 +31,9 @@ AUI.add('rl-content-tree-view', function (A) {
     	hiddenFieldsBox: null,
     	previewBoundingBox: null,
     	fileEntryBaseURL: null,
+    	fileEntryCheckerName: null,
+		folderCheckerName: null,
+		shortcutCheckerName: null,
 
         initializer: function () {
         
@@ -38,14 +41,18 @@ AUI.add('rl-content-tree-view', function (A) {
         	this.repository = this.get('repositoryId');
         	this.scopeGroup = this.get('scopeGroupId');
         	this.fileEntryBaseURL = this.get('fileEntryBaseURL');
+        	this.fileEntryCheckerName = this.get('fileEntryCheckerName');
+        	this.folderCheckerName = this.get('folderCheckerName');
+        	this.shortcutCheckerName = this.get('shortcutCheckerName');
+        	
+        	var folderId = this.get('rootFolderId');
+        	var folderLabel = this.get('rootFolderLabel');
+        	var checkAllEntriesId = this.get('checkAllId');
         	
         	var instance = this;
         	var boundingBoxId = this.ns + this.get('treeBox');
         	var hiddenBoundingBoxId = boundingBoxId + 'HiddenFields';
         	var previewBoundingBoxId = boundingBoxId + 'Preview';
-        	var folderId = this.get('rootFolderId');
-        	var folderLabel = this.get('rootFolderLabel');
-        	var checkAllEntriesId = this.get('checkAllId');
         	
         	A.one('#'+this.ns+'entriesContainer').append('<div id="'+previewBoundingBoxId+'" class="rl-tree-preview"></div>');
         	A.one('#'+this.ns+'entriesContainer').append('<div id="'+boundingBoxId+'"></div>');
@@ -256,7 +263,7 @@ AUI.add('rl-content-tree-view', function (A) {
         	// If node has a parent different to root (root doesn't have checkbox)
         	if (parentNode.isChecked !== undefined){
         	 
-        		//TODO ancestor instead of parents
+        		//TODO ancestor instead of parents eachParent
         	 	// If node is unchecked and it's parent is checked, all ancestors should be unchecked
         		 if (!treeNode.isChecked() && parentNode.isChecked()){
         			 console.log("uncheck parent on tree and form");
@@ -352,7 +359,7 @@ AUI.add('rl-content-tree-view', function (A) {
 
         _clickTreeCheckbox: function(node, checked){
         	if (node){
-	        	if (node.isChecked() === checked){
+	        	if (node.isChecked() !== checked){
 	        		//node.simulate('click');
 	        		node.check();
 	        	}
@@ -448,14 +455,18 @@ AUI.add('rl-content-tree-view', function (A) {
         				end: -1
            			},
            			function(folders) {
-           				A.each(folders, function(item, index, collection){          					
+           				A.each(folders, function(item, index, collection){ 
+           					console.log("item");
+           					console.log(item);
+           					var enableCheckbox = (item.deletePermission || item.updatePermission);
            					//if it is a file entry
-           					if (item.fileEntryId !== undefined){
-           						checkbox = (item.deletePermission);
+           					if (item.fileEntryId !== undefined){           						
             					instance.addContentEntry({
             						id : item.fileEntryId.toString(),
             						label: item.title,
-            						showCheckbox: checkbox,
+            						showCheckbox: enableCheckbox,
+            						rowCheckerId: item.fileEntryId.toString(),
+        							rowCheckerName: this.folderCheckerName,
             						expanded: false,
                						fullLoaded : true,
                						previewURL: item.previewFileURL,
@@ -463,12 +474,14 @@ AUI.add('rl-content-tree-view', function (A) {
             					},treeNode);
            					}
            					//If it is a folder
-           					else{         						
-           						checkbox = (item.updatePermission);
+           					else{
+           						
 	           					instance.addContentFolder({
 	           						id : item.folderId.toString(),
 	           						label: item.name,
-	           						showCheckbox: checkbox,
+	           						showCheckbox: enableCheckbox,
+	           						rowCheckerId: item.folderId.toString(),
+        							rowCheckerName:  this.fileEntryCheckerName,
 	           						expanded: false,
 	           						fullLoaded : false
 	           					},treeNode);
@@ -521,6 +534,15 @@ AUI.add('rl-content-tree-view', function (A) {
             	value: null
             },
             fileEntryBaseURL:{
+            	value: null
+            },
+            fileEntryCheckerName:{
+            	value: null
+            },
+            folderCheckerName:{
+            	value: null
+            },
+            shortcutCheckerName:{
             	value: null
             }
         }

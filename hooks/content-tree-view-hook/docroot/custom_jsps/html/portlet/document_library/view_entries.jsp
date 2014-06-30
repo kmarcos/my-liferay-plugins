@@ -401,7 +401,10 @@ if (<portlet:namespace />treeViewNode == undefined){
         		rootFolderId:'<%= treeFolderId %>',
         		rootFolderLabel: '<%= treeFolderTitle %>',
         		checkAllId: '<%= RowChecker.ALL_ROW_IDS %>',
-        		fileEntryBaseURL: '<%=viewFileEntryURL %>'
+        		fileEntryBaseURL: '<%=viewFileEntryURL %>',
+        		fileEntryCheckerName: '<%=FileEntry.class.getSimpleName()  %>',
+        		folderCheckerName: '<%=FileEntry.class.getSimpleName()  %>',
+        		shortcutCheckerName: '<%=FileEntry.class.getSimpleName()  %>'
         	}
     );
 }
