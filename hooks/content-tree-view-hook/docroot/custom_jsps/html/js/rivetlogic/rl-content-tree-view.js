@@ -2,23 +2,28 @@ AUI.add('rl-content-tree-view', function (A) {
 	
 	A.namespace('Rivet');
 
+	var ENTRIES_CONTAINER = 'entriesContainer';
 	var BOUNDING_BOX = 'boundingBox';
 	var TREE_NODE = 'tree-node';
 	var NODE_SELECTOR = '.'+TREE_NODE;
+	var NODE_CHECKBOX_SELECTOR = '.tree-node-checkbox-container';
 	var PARENT_NODE = 'parentNode';
 	var NODE = 'node';
+	var NODE_ATTR_ID = 'id';
 	var NODE_ATTR_IS_FOLDER = 'isFolder';
 	var NODE_ATTR_FULL_LOADED = 'fullLoaded';
 	var NODE_ATTR_PREVIEW_IMG_PREF = 'pvTreeImage';
 	var NODE_ATTR_PREVIEW_IMG_NODE = 'previewNode';
 	var NODE_ATTR_PREVIEW_URL = 'previewURL';
 	var NODE_ATTR_PREVIEW_FILE_COUNT = 'previewFileCount';
+	var NODE_TYPE_CHECKBOX = 'check';
 	var TPT_DELIM_OPEN = '{{';
 	var TPT_DELIM_CLOSE = '}}';
 	var TPT_ENCODED_DELIM_OPEN = '&#x7b;&#x7b;';
 	var TPT_ENCODED_DELIM_CLOSE = '&#x7d;&#x7d;';
 	var TPL_PREVIEW_NODE = '<img src="{previewFileURL}" id="{imgId}" class="treePreviewImg"/>';
 	var WORKFLOW_STATUS_ANY = -1;
+	var REG_EXP_GLOBAL = 'g';
 	 
     A.Rivet.ContentTreeView = A.Base.create('rl-content-tree-view',A.Base, [], {
 
@@ -54,9 +59,9 @@ AUI.add('rl-content-tree-view', function (A) {
         	var hiddenBoundingBoxId = boundingBoxId + 'HiddenFields';
         	var previewBoundingBoxId = boundingBoxId + 'Preview';
         	
-        	A.one('#'+this.ns+'entriesContainer').append('<div id="'+previewBoundingBoxId+'" class="rl-tree-preview"></div>');
-        	A.one('#'+this.ns+'entriesContainer').append('<div id="'+boundingBoxId+'"></div>');
-        	A.one('#'+this.ns+'entriesContainer').append('<div id="'+hiddenBoundingBoxId+'"></div>');
+        	A.one('#'+this.ns+ENTRIES_CONTAINER).append('<div id="'+previewBoundingBoxId+'" class="rl-tree-preview"></div>');
+        	A.one('#'+this.ns+ENTRIES_CONTAINER).append('<div id="'+boundingBoxId+'"></div>');
+        	A.one('#'+this.ns+ENTRIES_CONTAINER).append('<div id="'+hiddenBoundingBoxId+'"></div>');
         	
         	this.hiddenFieldsBox =  A.one('#'+hiddenBoundingBoxId).hide();
         	this.previewBoundingBox = A.one('#'+previewBoundingBoxId);
@@ -99,8 +104,8 @@ AUI.add('rl-content-tree-view', function (A) {
         	var itemSelectorTemplate = A.one('#'+this.ns+'item-selector-template').get('innerHTML');
         	
         	// some template tokens get lost because encoding:
-        	itemSelectorTemplate = itemSelectorTemplate.replace(new RegExp(TPT_ENCODED_DELIM_OPEN, 'g'),TPT_DELIM_OPEN);
-        	itemSelectorTemplate = itemSelectorTemplate.replace(new RegExp(TPT_ENCODED_DELIM_CLOSE, 'g'),TPT_DELIM_CLOSE);
+        	itemSelectorTemplate = itemSelectorTemplate.replace(new RegExp(TPT_ENCODED_DELIM_OPEN, REG_EXP_GLOBAL),TPT_DELIM_OPEN);
+        	itemSelectorTemplate = itemSelectorTemplate.replace(new RegExp(TPT_ENCODED_DELIM_CLOSE, REG_EXP_GLOBAL),TPT_DELIM_CLOSE);
         	
             // compiles template
             this.compiledItemSelectorTemplate = A.Handlebars.compile(itemSelectorTemplate);
@@ -148,7 +153,7 @@ AUI.add('rl-content-tree-view', function (A) {
         		target = target.get(PARENT_NODE);
         	}
         	var parentNode = node.get(PARENT_NODE);
-        	if (parentNode.get('id') != target.get('id')){
+        	if (parentNode.get(NODE_ATTR_ID) != target.get(NODE_ATTR_ID)){
 	        	if (this._isFolder(node)){
 	        		this._moveContentFolder(node, target);
 	        	}
@@ -163,8 +168,8 @@ AUI.add('rl-content-tree-view', function (A) {
     			'/dlapp/move-folder',
     			{
     				repositoryId: this.repository,
-    				folderId: folder.get('id'),
-    				parentFolderId: target.get('id'),
+    				folderId: folder.get(NODE_ATTR_ID),
+    				parentFolderId: target.get(NODE_ATTR_ID),
     				serviceContext: JSON.stringify(
                         {
                         	scopeGroupId: this.repository
@@ -179,8 +184,8 @@ AUI.add('rl-content-tree-view', function (A) {
     			'/dlapp/move-file-entry',
     			{
     				repositoryId: this.repository,        				
-    				fileEntryId: entry.get('id'),
-    				newFolderId: target.get('id'),
+    				fileEntryId: entry.get(NODE_ATTR_ID),
+    				newFolderId: target.get(NODE_ATTR_ID),
     				serviceContext: JSON.stringify(
                         {
                         	scopeGroupId: this.repository
@@ -192,15 +197,15 @@ AUI.add('rl-content-tree-view', function (A) {
         
         _mouseOverHandler: function(event){
         	event.stopPropagation();
-        	var treeNode = this.contentTree.getNodeById(event.currentTarget.get('id'));
+        	var treeNode = this.contentTree.getNodeById(event.currentTarget.get(NODE_ATTR_ID));
         	this._showPreview(treeNode);
         },
         
         _goToFileEntryViewPage: function(event){
         	event.stopPropagation();
-        	var treeNode = this.contentTree.getNodeById(event.currentTarget.get('id'));
+        	var treeNode = this.contentTree.getNodeById(event.currentTarget.get(NODE_ATTR_ID));
 			var viewURL = Liferay.PortletURL.createURL(this.fileEntryBaseURL);
-			viewURL.setParameter("fileEntryId", treeNode.get('id'));
+			viewURL.setParameter("fileEntryId", treeNode.get(NODE_ATTR_ID));
 			Liferay.Util.getOpener().location.href = viewURL.toString();
         },
         
@@ -235,7 +240,7 @@ AUI.add('rl-content-tree-view', function (A) {
         	}
         	
         	if (isItemName){
-        		var treeNode = this.contentTree.getNodeById(event.currentTarget.get('id'));
+        		var treeNode = this.contentTree.getNodeById(event.currentTarget.get(NODE_ATTR_ID));
         		if (!this._isFolder(treeNode)){
         			this._goToFileEntryViewPage(event);
         		}
@@ -247,15 +252,15 @@ AUI.add('rl-content-tree-view', function (A) {
         },
         
         _createPreview: function(treeNode){        	
-        	var previewImgId = this.ns + NODE_ATTR_PREVIEW_IMG_PREF + treeNode.get('id');
+        	var previewImgId = this.ns + NODE_ATTR_PREVIEW_IMG_PREF + treeNode.get(NODE_ATTR_ID);
         	var previewURL = treeNode.get(NODE_ATTR_PREVIEW_URL);      	    
-        	var previewNode = A.Lang.sub(TPL_PREVIEW_NODE, {"imgId":previewImgId,"previewFileURL":previewURL});      	
+        	var previewNode = A.Lang.sub(TPL_PREVIEW_NODE, {"imgId":previewImgId, "previewFileURL":previewURL});      	
         	treeNode.set(NODE_ATTR_PREVIEW_IMG_NODE, previewNode);    	
         	return previewNode;
         },
         
         _clickCheckBox: function(event){
-        	var selectedNodeId = event.currentTarget.attr('id');
+        	var selectedNodeId = event.currentTarget.attr(NODE_ATTR_ID);
         	var relatedCheckbox = this.hiddenFieldsBox.one('[type=checkbox][value='+selectedNodeId+']');        	
         	if (relatedCheckbox !== null){
         		relatedCheckbox.simulate("click");
@@ -264,7 +269,7 @@ AUI.add('rl-content-tree-view', function (A) {
         },
                
         _clickHitArea: function(event){
-        	var treeNode = this.contentTree.getNodeById(event.currentTarget.attr('id')); 
+        	var treeNode = this.contentTree.getNodeById(event.currentTarget.attr(NODE_ATTR_ID)); 
         	if (treeNode) {
         		if (!(this._isFullLoaded(treeNode))){
         			this._getChildren(treeNode, this);
@@ -278,7 +283,7 @@ AUI.add('rl-content-tree-view', function (A) {
         
         _selectAllHiddenCheckbox: function(event){
         	var checked = event.target.attr('checked');
-        	this.contentTree.get(BOUNDING_BOX).all('.tree-node-checkbox-container').each(function(node){
+        	this.contentTree.get(BOUNDING_BOX).all(NODE_CHECKBOX_SELECTOR).each(function(node){
         	var nodeChecked = node.one('[type=checkbox]').attr('checked');
         	if (nodeChecked !== checked){
         		  node.simulate('click');
@@ -293,7 +298,7 @@ AUI.add('rl-content-tree-view', function (A) {
     		   parentNode = this.contentTree.getNodeById(newNodeConfig.parentFolderId);
        	   }
     	   if (newNodeConfig.showCheckbox){
-    		   nodeType = 'check';
+    		   nodeType = NODE_TYPE_CHECKBOX;
     	   }
     	   if (parentNode === undefined){
        			parentNode = this.contentRoot;
@@ -320,7 +325,7 @@ AUI.add('rl-content-tree-view', function (A) {
         	if (forceBindUI){
         		this.contentTree.bindUI();
         	}        	
-        	if (nodeType === 'check'){
+        	if (nodeType === NODE_TYPE_CHECKBOX){
         		// add checkbox
         		this._addProcessCheckbox(newNodeConfig);
         	}
@@ -336,7 +341,7 @@ AUI.add('rl-content-tree-view', function (A) {
            			'/content-tree-view-hook.enhanceddlapp/get-folders-and-file-entries-and-file-shortcuts',
            			{
            				repositoryId: instance.repository,
-           				folderId: treeNode.get('id'),
+           				folderId: treeNode.get(NODE_ATTR_ID),
            				status: WORKFLOW_STATUS_ANY,
            				includeMountFolders :true,
         				start: -1,

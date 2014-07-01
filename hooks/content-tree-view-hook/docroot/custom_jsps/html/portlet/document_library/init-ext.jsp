@@ -23,9 +23,6 @@ if (themeDisplay.isSignedIn()){
 	displayViewsAugmented[newDisplayIdx] = TREE_VIEW;
 	displayViews = displayViewsAugmented;
 }
-else{
-    System.out.println("no signed in");
-}
 %>
 
 <aui:script>                   
