@@ -13,25 +13,20 @@
  *
  */
 --%>
+
+<%-- RivetLogic Custom BEGINS --%>
 <%
-	String TREE_VIEW = "tree";
+String TREE_VIEW = "tree";
+if (themeDisplay.isSignedIn()){
     int newDisplayIdx = displayViews.length;
 	String[] displayViewsAugmented = Arrays.copyOf(displayViews, displayViews.length + 1);   
 	displayViewsAugmented[newDisplayIdx] = TREE_VIEW;
 	displayViews = displayViewsAugmented;
+}
+else{
+    System.out.println("no signed in");
+}
 %>
-
-<style>
-	.document-container .rl-tree-preview {
-		
-		background: url(<%= themeDisplay.getPathThemeImages() %>/common/checkerboard.png);
-	    float: right;
-	    height: 400px;
-	    width: 40%;
-	    padding: 20px;
-	    text-align:center;
-	}
-</style>
 
 <aui:script>                   
 AUI().applyConfig({
@@ -56,3 +51,5 @@ AUI().applyConfig({
 <aui:script use="aui-base">
 var <portlet:namespace />treeView;
 </aui:script>
+
+<%-- RivetLogic Custom ENDS --%>

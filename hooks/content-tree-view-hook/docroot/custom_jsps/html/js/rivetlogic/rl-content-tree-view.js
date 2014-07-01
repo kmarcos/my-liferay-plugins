@@ -121,7 +121,13 @@ AUI.add('rl-content-tree-view', function (A) {
             var dragTreeNode = dragNode.getData(TREE_NODE);
             var dropNode = event.drop.get(NODE).get(PARENT_NODE);
             var dropTreeNode = dropNode.getData(TREE_NODE);          
-            this._moveContentNode(dragTreeNode,dropTreeNode);          	
+            if (!(dropTreeNode instanceof A.TreeNode)) {
+                event.preventDefault();
+            }
+            else{
+            	this._moveContentNode(dragTreeNode,dropTreeNode);
+            }
+            console.log("drophit");
         },
         
         _afterDropHitHandler: function(event){     	
@@ -133,7 +139,8 @@ AUI.add('rl-content-tree-view', function (A) {
         	if (!(this._isFullLoaded(dropTreeNode))){
         		dropTreeNode.empty();
     			this._getChildren(dropTreeNode, this);
-    		}            	
+    		}
+        	console.log("after drophit");
         },       
         
         _moveContentNode: function(node, target){
@@ -199,7 +206,7 @@ AUI.add('rl-content-tree-view', function (A) {
         
         _showPreview: function(treeNode){       	
         	this.previewBoundingBox.empty();        	
-        	if (!this._isFolder(treeNode)){
+        	if (treeNode!== undefined && !this._isFolder(treeNode)){
 	        	var previewURL = treeNode.get(NODE_ATTR_PREVIEW_URL);
 	        	var previewImgNode = treeNode.get(NODE_ATTR_PREVIEW_IMG_NODE);
 	        	if (!previewImgNode && previewURL !== undefined){

@@ -2,7 +2,14 @@
 	
 	background: url(@theme_image_path@/common/checkerboard.png);
     float: right;
-    height: 80%;
+    height: 400%;
     width: 40%;
     padding: 20px;
+    text-align:center;
+}
+
+.aui .icon-tree{
+	background-image: url(/html/icons/rl_tree.png);
+	height: 14px;
+    width: 14px;
 }
