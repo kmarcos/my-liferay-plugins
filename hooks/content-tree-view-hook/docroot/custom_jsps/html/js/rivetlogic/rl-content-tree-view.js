@@ -1,6 +1,9 @@
 AUI.add('rl-content-tree-view', function (A) {
 	
 	A.namespace('Rivet');
+	
+	A.Rivet.TreeTargetJournal = 'journal';
+	A.Rivet.TreeTargetDL = 'documentLibrary';
 
 	var ENTRIES_CONTAINER = 'entriesContainer';
 	var BOUNDING_BOX = 'boundingBox';
@@ -11,6 +14,7 @@ AUI.add('rl-content-tree-view', function (A) {
 	var NODE = 'node';
 	var NODE_ATTR_ID = 'id';
 	var NODE_ATTR_IS_FOLDER = 'isFolder';
+	var NODE_ATTR_PARENT_FOLDER = 'parentFolderId';
 	var NODE_ATTR_FULL_LOADED = 'fullLoaded';
 	var NODE_ATTR_PREVIEW_IMG_PREF = 'pvTreeImage';
 	var NODE_ATTR_PREVIEW_IMG_NODE = 'previewNode';
@@ -28,6 +32,7 @@ AUI.add('rl-content-tree-view', function (A) {
     A.Rivet.ContentTreeView = A.Base.create('rl-content-tree-view',A.Base, [], {
 
     	ns : null,
+    	treeTarget : null,
     	repository: null,
     	scopeGroup: null,
     	contentTree: null,
@@ -35,20 +40,19 @@ AUI.add('rl-content-tree-view', function (A) {
     	compiledItemSelectorTemplate: null,
     	hiddenFieldsBox: null,
     	previewBoundingBox: null,
-    	fileEntryBaseURL: null,
+    	viewPageBaseURL: null,
     	fileEntryCheckerName: null,
 		folderCheckerName: null,
 		shortcutCheckerName: null,
+		journalArticleCheckerName: null,
+		journlaFolderCheckerName: null,
 
         initializer: function () {
         
-        	this.ns = this.get('namespace');
-        	this.repository = this.get('repositoryId');
+        	this.ns = this.get('namespace');        	        	
         	this.scopeGroup = this.get('scopeGroupId');
-        	this.fileEntryBaseURL = this.get('fileEntryBaseURL');
-        	this.fileEntryCheckerName = this.get('fileEntryCheckerName');
-        	this.folderCheckerName = this.get('folderCheckerName');
-        	this.shortcutCheckerName = this.get('shortcutCheckerName');
+        	this._getTargetAttributes();        	
+        	this.viewPageBaseURL = this.get('viewPageBaseURL');   	
         	
         	var folderId = this.get('rootFolderId');
         	var folderLabel = this.get('rootFolderLabel');
@@ -119,6 +123,24 @@ AUI.add('rl-content-tree-view', function (A) {
         	newNodeConfig.expanded = false;
         	newNodeConfig.fullLoaded = true;
         	this._addContentNode(newNodeConfig, parentNode, false);
+        },
+        
+        _getTargetAttributes: function(){
+        	this.treeTarget = this.get('treeTarget');
+        	if (this._isDLTarget()){
+        		this.repository = this.get('repositoryId');
+        		this.fileEntryCheckerName = this.get('fileEntryCheckerName');
+            	this.folderCheckerName = this.get('folderCheckerName');
+            	this.shortcutCheckerName = this.get('shortcutCheckerName');
+        	}
+        	else{
+        		this.journalArticleCheckerName = this.get('journalArticleCheckerName');
+            	this.journlaFolderCheckerName = this.get('journlaFolderCheckerName');
+        	}
+        },
+        
+        _isDLTarget: function(){        	
+        	return (this.treeTarget === A.Rivet.TreeTargetDL);
         },
         
         _dropHitHandler: function(event){        	
@@ -204,8 +226,16 @@ AUI.add('rl-content-tree-view', function (A) {
         _goToFileEntryViewPage: function(event){
         	event.stopPropagation();
         	var treeNode = this.contentTree.getNodeById(event.currentTarget.get(NODE_ATTR_ID));
-			var viewURL = Liferay.PortletURL.createURL(this.fileEntryBaseURL);
-			viewURL.setParameter("fileEntryId", treeNode.get(NODE_ATTR_ID));
+			var viewURL = Liferay.PortletURL.createURL(this.viewPageBaseURL);
+			if (this._isDLTarget()){
+				viewURL.setParameter("fileEntryId", treeNode.get(NODE_ATTR_ID));
+    		}
+			else{
+				viewURL.setParameter("articleId", treeNode.get(NODE_ATTR_ID));
+				viewURL.setParameter("folderId", treeNode.get(NODE_ATTR_PARENT_FOLDER));
+				viewURL.setParameter("groupId", this.scopeGroup);
+			}
+			
 			Liferay.Util.getOpener().location.href = viewURL.toString();
         },
         
@@ -315,6 +345,7 @@ AUI.add('rl-content-tree-view', function (A) {
         		expanded: expanded
 			  }
 			);        	
+    	   	newNode.set(NODE_ATTR_PARENT_FOLDER, newNodeConfig.parentFolderId);
         	newNode.set(NODE_ATTR_IS_FOLDER, isFolder);
         	newNode.set(NODE_ATTR_FULL_LOADED, newNodeConfig.fullLoaded);        	
         	if (newNodeConfig.previewURL !== undefined){
@@ -409,6 +440,9 @@ AUI.add('rl-content-tree-view', function (A) {
         	treeBox:{
         		value: null
         	},
+        	treeTarget:{
+        		value: null
+        	},
         	repositoryId:{
         		value: null
         	},
@@ -424,7 +458,7 @@ AUI.add('rl-content-tree-view', function (A) {
             checkAllId:{
             	value: null
             },
-            fileEntryBaseURL:{
+            viewPageBaseURL:{
             	value: null
             },
             fileEntryCheckerName:{
@@ -434,6 +468,12 @@ AUI.add('rl-content-tree-view', function (A) {
             	value: null
             },
             shortcutCheckerName:{
+            	value: null
+            },
+            journalArticleCheckerName:{
+            	value: null
+            },
+            journalFolderCheckerName:{
             	value: null
             }
         }

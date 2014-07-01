@@ -11,10 +11,8 @@ PortletURL tempRowURL = (PortletURL)request.getAttribute("view_entries.jsp-tempR
 <aui:script use="rl-content-tree-view">
 
 	<portlet:namespace />treeView.addContentFolder({
-		id: '<%=folder.getFolderId() %>',
-		label: '<%=folder.getName() %>',
-		title: '<%=folder.getName() %>',
-		description: '<%=folder.getDescription() %>',
+		id: '<%= folder.getFolderId() %>',
+		label: '<%= folder.getName() %>',
 		showCheckbox: '<%= DLFolderPermission.contains(permissionChecker, folder, ActionKeys.DELETE) || DLFolderPermission.contains(permissionChecker, folder, ActionKeys.UPDATE) %>',
 		rowCheckerId: '<%= String.valueOf(folder.getFolderId()) %>',
 		rowCheckerName: '<%= Folder.class.getSimpleName() %>',

@@ -3,37 +3,37 @@
 <c:if test='<%= displayStyle.equals(TREE_VIEW) %>'>
 
 <%
-	// Base URL for view file entry
-	PortletURL viewFileEntryURL = liferayPortletResponse.createRenderURL();
-	viewFileEntryURL.setParameter("struts_action", "/document_library/view_file_entry");
-	viewFileEntryURL.setParameter("redirect", HttpUtil.removeParameter(currentURL, liferayPortletResponse.getNamespace() + "ajax"));
+	// Base URL for view web content article
+	PortletURL viewArticleURL = liferayPortletResponse.createRenderURL();
+	viewArticleURL.setParameter("struts_action", "/journal/edit_article");
+	viewArticleURL.setParameter("redirect", currentURL);
 
 	List<Long> ancestorIds = new ArrayList<Long>();
 
 	// Root will be always the same (home)
-	long treeFolderId = DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
-	String treeFolderTitle = LanguageUtil.get(pageContext, navigation);
+	long treeFolderId = JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID;
+	String treeFolderTitle = LanguageUtil.get(pageContext, displayTerms.getNavigation());
 	
 	// Current folder could be different to root
 	long currFolderId = treeFolderId;
 	String currFolderTitle = treeFolderTitle;
 	
-	if (folderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID){
+	if (folderId != JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID){
 	    
-	    Folder currFolder = DLAppServiceUtil.getFolder(folderId);
+	    JournalFolder currFolder = JournalFolderServiceUtil.getFolder(folderId);
 	    currFolderId = folderId;
 	    currFolderTitle = currFolder.getName(); 
 	    
 	 	// We need get all ancestors util root
-	    List<Folder> ancestors = currFolder.getAncestors();
+	    List<JournalFolder> ancestors = currFolder.getAncestors();
 	 	
 	 	// We are simulating the root folder as an ancestor
-	 	ancestorIds.add(DLFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+	 	ancestorIds.add(JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
 	 	
 	 	java.util.ListIterator li = ancestors.listIterator(ancestors.size());
 		 // Iterate in reverse
 		 while(li.hasPrevious()) {
-		     Folder f = (Folder) li.previous();
+		     JournalFolder f = (JournalFolder) li.previous();
 		     ancestorIds.add(f.getFolderId());
 		 }	 
 	}
@@ -49,19 +49,20 @@ if (<portlet:namespace />treeViewNode == undefined){
         	{
         		namespace: '<portlet:namespace />',
         		treeBox: TREE_CONTAINER,
-        		treeTarget: A.Rivet.TreeTargetDL,
-        		repositoryId: '<%= repositoryId %>',
+        		treeTarget: A.Rivet.TreeTargetJournal,
         		scopeGroupId: '<%= scopeGroupId %>',
         		rootFolderId:'<%= treeFolderId %>',
         		rootFolderLabel: '<%= treeFolderTitle %>',
         		checkAllId: '<%= RowChecker.ALL_ROW_IDS %>',
-        		viewPageBaseURL: '<%= viewFileEntryURL %>',
-        		fileEntryCheckerName: '<%= FileEntry.class.getSimpleName() %>',
-        		folderCheckerName: '<%= Folder.class.getSimpleName() %>',
-        		shortcutCheckerName: '<%= DLFileShortcut.class.getSimpleName() %>'
+        		viewPageBaseURL: '<%= viewArticleURL %>',
+        		journalArticleCheckerName: '<%= JournalArticle.class.getSimpleName() %>',
+        		journalFolderCheckerName: '<%= JournalFolder.class.getSimpleName() %>',
         	}
     );
 }
+
+<%--
+
 <% 
 	// If current folder is not root (home)
 	if (currFolderId != treeFolderId){
@@ -70,9 +71,9 @@ if (<portlet:namespace />treeViewNode == undefined){
         for (Long ancestorId:  ancestorIds){ 
             
             // Folders
-		    List<Folder> cFolders = DLAppServiceUtil.getFolders(repositoryId, ancestorId);		    
+		    List<JournalFolder> cFolders = JournalFolderServiceUtil.getFolders(scopeGroupId, ancestorId);		    
 		    
-		    for (Folder cFolder: cFolders){
+		    for (JournalFolder cFolder: cFolders){
 		        boolean isAncestor = false;
 			    if ( (cFolder.getFolderId() == currFolderId ) || (ancestorIds.contains(cFolder.getFolderId())) ){
 			       isAncestor = true;
@@ -81,6 +82,8 @@ if (<portlet:namespace />treeViewNode == undefined){
 		    	<portlet:namespace />treeView.addContentFolder({
 					id: '<%= cFolder.getFolderId() %>',
 					label: '<%= cFolder.getName() %>',
+					title: '<%= cFolder.getName() %>',
+					description: '<%= cFolder.getDescription() %>',
 					showCheckbox: '<%= DLFolderPermission.contains(permissionChecker, cFolder, ActionKeys.DELETE) || DLFolderPermission.contains(permissionChecker, cFolder, ActionKeys.UPDATE) %>',
 					rowCheckerId: '<%= String.valueOf(cFolder.getFolderId()) %>',
 					rowCheckerName: '<%= Folder.class.getSimpleName() %>',
@@ -91,10 +94,10 @@ if (<portlet:namespace />treeViewNode == undefined){
 		    	<%		 
 		    }
 		    
-		    // Files
-		    List<FileEntry> cFiles = DLAppServiceUtil.getFileEntries(repositoryId, ancestorId);	
+		    // Articles
+		    List<JournalArticle> cArticles = JournalArticleServiceUtil.getArticles(scopeGroupId, ancestorId);	
 		    
-		    for (FileEntry cFileEntry: cFiles){
+		    for (JournalArticle cArticle: cArticles){
 		         
 		        FileVersion latestFileVersion = cFileEntry.getFileVersion();
 		        String rowCheckerName = FileEntry.class.getSimpleName();
@@ -109,6 +112,8 @@ if (<portlet:namespace />treeViewNode == undefined){
 		        <portlet:namespace />treeView.addContentEntry({
 		        	id : '<%= latestFileVersion.getFileEntryId() %>',
 		        	label: '<%= latestFileVersion.getTitle() %>',
+		        	title: '<%= latestFileVersion.getTitle() %>',
+		        	description: '<%= latestFileVersion.getDescription() %>',
 		        	showCheckbox: '<%= DLFileEntryPermission.contains(permissionChecker, cFileEntry, ActionKeys.DELETE) || DLFileEntryPermission.contains(permissionChecker, cFileEntry, ActionKeys.UPDATE) %>',
 		        	rowCheckerId: '<%= String.valueOf(rowCheckerId) %>',
 		        	rowCheckerName: '<%= rowCheckerName %>',
@@ -119,6 +124,6 @@ if (<portlet:namespace />treeViewNode == undefined){
 		}
 	}
 %>
-
+ --%>
 </aui:script>
 </c:if>

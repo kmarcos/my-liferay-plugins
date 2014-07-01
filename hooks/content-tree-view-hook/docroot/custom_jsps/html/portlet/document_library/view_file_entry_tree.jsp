@@ -29,8 +29,6 @@ if (fileShortcut != null) {
 <portlet:namespace />treeView.addContentEntry({
 	id : '<%= latestFileVersion.getFileEntryId() %>',
 	label: '<%= latestFileVersion.getTitle() %>',
-	title: '<%= latestFileVersion.getTitle() %>',
-	description: '<%= latestFileVersion.getDescription() %>',
 	showCheckbox: '<%= DLFileEntryPermission.contains(permissionChecker, fileEntry, ActionKeys.DELETE) || DLFileEntryPermission.contains(permissionChecker, fileEntry, ActionKeys.UPDATE) %>',
 	rowCheckerId: '<%= String.valueOf(rowCheckerId) %>',
 	rowCheckerName: '<%= rowCheckerName %>',
