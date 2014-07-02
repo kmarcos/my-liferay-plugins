@@ -13,8 +13,6 @@ String articleImageURL = article.getArticleImageURL(themeDisplay);
 <portlet:namespace />treeView.addContentEntry({
 	id : '<%= article.getArticleId() %>',
 	label: '<%= article.getTitle(locale) %>',
-	title: '<%= article.getTitle(locale) %>',
-	description: '<%= article.getDescription(locale) %>',
 	showCheckbox: '<%= JournalArticlePermission.contains(permissionChecker, article, ActionKeys.DELETE) || JournalArticlePermission.contains(permissionChecker, article, ActionKeys.EXPIRE) || JournalArticlePermission.contains(permissionChecker, article, ActionKeys.UPDATE) %>',
 	rowCheckerId: '<%= String.valueOf(article.getArticleId()) %>',
 	rowCheckerName: '<%= JournalArticle.class.getSimpleName() %>',

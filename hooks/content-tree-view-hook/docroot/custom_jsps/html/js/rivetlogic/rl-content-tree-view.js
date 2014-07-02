@@ -363,8 +363,17 @@ AUI.add('rl-content-tree-view', function (A) {
         _addProcessCheckbox: function(newNodeConfig){
     		this.hiddenFieldsBox.append(this.compiledItemSelectorTemplate(newNodeConfig));
         },
+        
+        _getChildren: function(treeNode, instance) {  
+        	if (this._isDLTarget()){
+        		this._getDLChildren(treeNode, instance);
+        	}
+        	else{
+        		this._getWCChildren(treeNode, instance);
+        	}
+        },
 
-        _getChildren: function(treeNode, instance) {        	   
+        _getDLChildren: function(treeNode, instance) {        	   
         	// Get folders children of this folder
         	Liferay.Service(
            			'/content-tree-view-hook.enhanceddlapp/get-folders-and-file-entries-and-file-shortcuts',
@@ -401,6 +410,52 @@ AUI.add('rl-content-tree-view', function (A) {
 	           						showCheckbox: enableCheckbox,
 	           						rowCheckerId: item.folderId.toString(),
         							rowCheckerName: instance.folderCheckerName,
+	           						expanded: false,
+	           						fullLoaded: false
+	           					},treeNode);
+           					}
+           				});
+           			}
+           		);        	   
+        	treeNode.set(NODE_ATTR_FULL_LOADED, true);
+        	treeNode.expand();
+        },
+        
+        _getWCChildren: function(treeNode, instance) {        	   
+        	// Get folders children of this folder
+        	Liferay.Service(
+           			'/content-tree-view-hook.enhancedjournalapp/get-folders-and-articles',
+           			{
+           				groupId: instance.scopeGroup,
+           				folderId: treeNode.get(NODE_ATTR_ID),
+        				start: -1,
+        				end: -1
+           			},
+           			function(folders) {
+           				A.each(folders, function(item, index, collection){
+           					var enableCheckbox = (item.deletePermission || item.updatePermission);
+           					//if it is an article
+           					if (item.articleId !== undefined){           						
+            					instance.addContentEntry({
+            						id : item.articleId.toString(),
+            						label: item.title,
+            						showCheckbox: enableCheckbox,
+            						rowCheckerId: item.articleId.toString(),
+        							rowCheckerName: instance.journalArticleCheckerName,
+            						expanded: false,
+               						fullLoaded: true,
+               						previewURL: item.articleImageURL,
+            					},treeNode);
+           					}
+           					//If it is a folder
+           					else{
+           						
+	           					instance.addContentFolder({
+	           						id : item.folderId.toString(),
+	           						label: item.name,
+	           						showCheckbox: enableCheckbox,
+	           						rowCheckerId: item.folderId.toString(),
+        							rowCheckerName: instance.journalFolderCheckerName,
 	           						expanded: false,
 	           						fullLoaded: false
 	           					},treeNode);

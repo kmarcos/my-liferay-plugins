@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.messaging.Message;
 
 import com.rivetlogic.tree.view.service.ClpSerializer;
 import com.rivetlogic.tree.view.service.EnhancedDLAppServiceUtil;
+import com.rivetlogic.tree.view.service.EnhancedJournalAppServiceUtil;
 
 /**
  * @author rivetlogic
@@ -36,6 +37,8 @@ public class ClpMessageListener extends BaseMessageListener {
 		if (command.equals("undeploy") &&
 				servletContextName.equals(getServletContextName())) {
 			EnhancedDLAppServiceUtil.clearService();
+
+			EnhancedJournalAppServiceUtil.clearService();
 		}
 	}
 }

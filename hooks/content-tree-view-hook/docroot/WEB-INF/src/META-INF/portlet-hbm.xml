@@ -3,4 +3,5 @@
 
 <hibernate-mapping default-lazy="false" auto-import="false">
 	<import class="com.rivetlogic.tree.view.model.EnhancedDLApp" />
+	<import class="com.rivetlogic.tree.view.model.EnhancedJournalApp" />
 </hibernate-mapping>

@@ -30,8 +30,8 @@ import com.liferay.portlet.documentlibrary.util.DLUtil;
 import com.liferay.portlet.documentlibrary.util.ImageProcessorUtil;
 import com.liferay.portlet.documentlibrary.util.PDFProcessorUtil;
 import com.liferay.portlet.documentlibrary.util.VideoProcessorUtil;
-import com.rivetlogic.tree.view.model.DLFileEntry;
-import com.rivetlogic.tree.view.model.DLFolder;
+import com.rivetlogic.tree.view.model.documentlibrary.DLFileEntry;
+import com.rivetlogic.tree.view.model.documentlibrary.DLFolder;
 import com.rivetlogic.tree.view.service.base.EnhancedDLAppServiceBaseImpl;
 
 import java.util.ArrayList;

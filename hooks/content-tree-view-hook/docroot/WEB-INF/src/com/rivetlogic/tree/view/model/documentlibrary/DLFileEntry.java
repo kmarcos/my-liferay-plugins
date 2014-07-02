@@ -1,4 +1,4 @@
-package com.rivetlogic.tree.view.model;
+package com.rivetlogic.tree.view.model.documentlibrary;
 
 import com.liferay.portal.kernel.repository.model.FileEntry;
 
