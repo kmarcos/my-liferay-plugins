@@ -19,7 +19,6 @@ AUI.add('rl-content-tree-view', function (A) {
 	var NODE_ATTR_PREVIEW_IMG_PREF = 'pvTreeImage';
 	var NODE_ATTR_PREVIEW_IMG_NODE = 'previewNode';
 	var NODE_ATTR_PREVIEW_URL = 'previewURL';
-	var NODE_ATTR_PREVIEW_FILE_COUNT = 'previewFileCount';
 	var NODE_TYPE_CHECKBOX = 'check';
 	var TPT_DELIM_OPEN = '{{';
 	var TPT_DELIM_CLOSE = '}}';
@@ -281,7 +280,7 @@ AUI.add('rl-content-tree-view', function (A) {
         	
         },
         
-        _createPreview: function(treeNode){        	
+        _createPreview: function(treeNode){
         	var previewImgId = this.ns + NODE_ATTR_PREVIEW_IMG_PREF + treeNode.get(NODE_ATTR_ID);
         	var previewURL = treeNode.get(NODE_ATTR_PREVIEW_URL);      	    
         	var previewNode = A.Lang.sub(TPL_PREVIEW_NODE, {"imgId":previewImgId, "previewFileURL":previewURL});      	
@@ -350,7 +349,6 @@ AUI.add('rl-content-tree-view', function (A) {
         	newNode.set(NODE_ATTR_FULL_LOADED, newNodeConfig.fullLoaded);        	
         	if (newNodeConfig.previewURL !== undefined){
         		newNode.set(NODE_ATTR_PREVIEW_URL, newNodeConfig.previewURL);
-        		newNode.set(NODE_ATTR_PREVIEW_FILE_COUNT, newNodeConfig.previewFileCount);
         	}      	      	
         	parentNode.appendChild(newNode);        	
         	if (forceBindUI){
@@ -392,7 +390,6 @@ AUI.add('rl-content-tree-view', function (A) {
             						expanded: false,
                						fullLoaded: true,
                						previewURL: item.previewFileURL,
-               						previewFileCount: item.previewFileCount,
             					},treeNode);
            					}
            					//If it is a folder

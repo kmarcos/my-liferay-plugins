@@ -34,7 +34,6 @@ if (fileShortcut != null) {
 	rowCheckerName: '<%= rowCheckerName %>',
 	parentFolderId: '<%= fileEntry.getFolderId() %>',
 	previewURL:'<%= previewFileURL %>',
-	previewFileCount: <%= previewFileCount %>,
 	viewURL: '<%= tempRowURL %>'
 });
 </aui:script>

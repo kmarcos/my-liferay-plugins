@@ -19,7 +19,7 @@ String articleImageURL = article.getArticleImageURL(themeDisplay);
 	rowCheckerId: '<%= String.valueOf(article.getArticleId()) %>',
 	rowCheckerName: '<%= JournalArticle.class.getSimpleName() %>',
 	parentFolderId: '<%= article.getFolderId() %>',
-	previewURL:'<%= articleImageURL %>',
+	previewURL:'<%= Validator.isNotNull(articleImageURL) ? articleImageURL : themeDisplay.getPathThemeImages() + "/file_system/large/article.png" %>',
 	viewURL: '<%= tempRowURL %>'
 });
 </aui:script>

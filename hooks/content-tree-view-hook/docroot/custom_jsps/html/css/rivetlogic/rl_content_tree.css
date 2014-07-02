@@ -1,4 +1,5 @@
-.document-container .rl-tree-preview {
+.document-container .rl-tree-preview,
+.journal-container .rl-tree-preview {
 	
 	background: url(@theme_image_path@/common/checkerboard.png);
     float: right;
