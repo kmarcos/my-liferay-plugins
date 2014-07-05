@@ -1,5 +1,6 @@
 package com.rivetlogic.tree.view.model.journal;
 
+import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portlet.journal.model.JournalArticle;
 
@@ -16,15 +17,19 @@ public class WCArticle implements Serializable {
     private boolean deletePermission;
     private boolean updatePermission;
     private String articleImageURL = "";
+    private String rowCheckerId = "";
+    private String rowCheckerName = "";
 
     public WCArticle(JournalArticle article) {
         this.articleId = article.getArticleId();
         this.version = article.getVersion();
-        this.title = article.getTitle(LocaleUtil.getDefault());
+        this.title = article.getTitle(LocaleUtil.getSiteDefault());
         this.folderId = article.getFolderId();
         this.groupId = article.getGroupId();
         this.deletePermission = false;
         this.updatePermission = false;
+        this.rowCheckerId = article.getArticleId();
+        this.rowCheckerName = Folder.class.getSimpleName();
     }
 
     public String getArticleId() {
@@ -89,5 +94,21 @@ public class WCArticle implements Serializable {
 
     public void setArticleImageURL(String articleImageURL) {
         this.articleImageURL = articleImageURL;
+    }
+
+    public String getRowCheckerId() {
+        return rowCheckerId;
+    }
+
+    public void setRowCheckerId(String rowCheckerId) {
+        this.rowCheckerId = rowCheckerId;
+    }
+
+    public String getRowCheckerName() {
+        return rowCheckerName;
+    }
+
+    public void setRowCheckerName(String rowCheckerName) {
+        this.rowCheckerName = rowCheckerName;
     }
 }

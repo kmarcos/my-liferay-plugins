@@ -10,15 +10,18 @@ if ((user.getUserId() == fileEntry.getUserId()) || permissionChecker.isCompanyAd
 }
 
 DLFileShortcut fileShortcut = (DLFileShortcut)request.getAttribute("view_entries.jsp-fileShortcut");
-
 PortletURL tempRowURL = (PortletURL)request.getAttribute("view_entries.jsp-tempRowURL");
 
 String rowCheckerName = FileEntry.class.getSimpleName();
 long rowCheckerId = fileEntry.getFileEntryId();
+boolean isFileShortcut = false;
+long parentFolderId = fileEntry.getFolderId();
 
 if (fileShortcut != null) {
 	rowCheckerName = DLFileShortcut.class.getSimpleName();
 	rowCheckerId = fileShortcut.getFileShortcutId();
+	isFileShortcut = true;
+	parentFolderId = fileShortcut.getFolderId();
 }
 %>
 
@@ -29,10 +32,11 @@ if (fileShortcut != null) {
 <portlet:namespace />treeView.addContentEntry({
 	id : '<%= latestFileVersion.getFileEntryId() %>',
 	label: '<%= latestFileVersion.getTitle() %>',
+	shortcut: <%=isFileShortcut %>,
 	showCheckbox: '<%= DLFileEntryPermission.contains(permissionChecker, fileEntry, ActionKeys.DELETE) || DLFileEntryPermission.contains(permissionChecker, fileEntry, ActionKeys.UPDATE) %>',
 	rowCheckerId: '<%= String.valueOf(rowCheckerId) %>',
 	rowCheckerName: '<%= rowCheckerName %>',
-	parentFolderId: '<%= fileEntry.getFolderId() %>',
+	parentFolderId: '<%= parentFolderId %>',
 	previewURL:'<%= previewFileURL %>',
 	viewURL: '<%= tempRowURL %>'
 });

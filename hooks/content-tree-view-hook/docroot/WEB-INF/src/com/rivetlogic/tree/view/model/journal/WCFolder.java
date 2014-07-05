@@ -1,5 +1,6 @@
 package com.rivetlogic.tree.view.model.journal;
 
+import com.liferay.portlet.journal.model.JournalArticle;
 import com.liferay.portlet.journal.model.JournalFolder;
 
 import java.io.Serializable;
@@ -11,9 +12,10 @@ public class WCFolder implements Serializable {
     private String name = "";
     private long parentFolderId;
     private long groupId;
-
     private boolean deletePermission;
     private boolean updatePermission;
+    private String rowCheckerId = "";
+    private String rowCheckerName = "";
 
     public WCFolder(JournalFolder folder) {
         this.folderId = folder.getFolderId();
@@ -22,7 +24,8 @@ public class WCFolder implements Serializable {
         this.groupId = folder.getGroupId();
         this.deletePermission = false;
         this.updatePermission = false;
-       
+        this.rowCheckerId = String.valueOf(folder.getFolderId());
+        this.rowCheckerName = JournalArticle.class.getSimpleName();
     }
 
     public long getFolderId() {
@@ -71,5 +74,21 @@ public class WCFolder implements Serializable {
 
     public void setUpdatePermission(boolean updatePermission) {
         this.updatePermission = updatePermission;
+    }
+
+    public String getRowCheckerId() {
+        return rowCheckerId;
+    }
+
+    public void setRowCheckerId(String rowCheckerId) {
+        this.rowCheckerId = rowCheckerId;
+    }
+
+    public String getRowCheckerName() {
+        return rowCheckerName;
+    }
+
+    public void setRowCheckerName(String rowCheckerName) {
+        this.rowCheckerName = rowCheckerName;
     }
 }

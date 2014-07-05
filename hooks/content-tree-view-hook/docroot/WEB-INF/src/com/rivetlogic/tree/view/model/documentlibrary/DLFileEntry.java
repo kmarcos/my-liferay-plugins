@@ -13,11 +13,14 @@ public class DLFileEntry implements Serializable {
     private String version = "";
     private long folderId;
     private long repositoryId;
+    private boolean shortcut = false;
     private boolean deletePermission;
     private boolean updatePermission;
     /* for preview */
     private int previewFileCount;
     private String previewFileURL;
+    private String rowCheckerId = "";
+    private String rowCheckerName = "";
 
     public DLFileEntry(FileEntry fileEntry) {
         this.fileEntryId = fileEntry.getFileEntryId();
@@ -28,6 +31,8 @@ public class DLFileEntry implements Serializable {
         this.repositoryId = fileEntry.getRepositoryId();
         this.deletePermission = false;
         this.updatePermission = false;
+        this.rowCheckerId = String.valueOf(fileEntry.getFileEntryId());
+        this.rowCheckerName = FileEntry.class.getSimpleName();
     }
 
     public long getFileEntryId() {
@@ -78,6 +83,14 @@ public class DLFileEntry implements Serializable {
         this.repositoryId = repositoryId;
     }
 
+    public boolean isShortcut() {
+        return shortcut;
+    }
+
+    public void setShortcut(boolean shortcut) {
+        this.shortcut = shortcut;
+    }
+
     public boolean isDeletePermission() {
         return deletePermission;
     }
@@ -108,5 +121,21 @@ public class DLFileEntry implements Serializable {
 
     public void setPreviewFileURL(String previewFileURL) {
         this.previewFileURL = previewFileURL;
+    }
+
+    public String getRowCheckerId() {
+        return rowCheckerId;
+    }
+
+    public void setRowCheckerId(String rowCheckerId) {
+        this.rowCheckerId = rowCheckerId;
+    }
+
+    public String getRowCheckerName() {
+        return rowCheckerName;
+    }
+
+    public void setRowCheckerName(String rowCheckerName) {
+        this.rowCheckerName = rowCheckerName;
     }
 }

@@ -56,9 +56,7 @@ if (<portlet:namespace />treeViewNode == undefined){
         		rootFolderLabel: '<%= treeFolderTitle %>',
         		checkAllId: '<%= RowChecker.ALL_ROW_IDS %>',
         		viewPageBaseURL: '<%= viewFileEntryURL %>',
-        		fileEntryCheckerName: '<%= FileEntry.class.getSimpleName() %>',
-        		folderCheckerName: '<%= Folder.class.getSimpleName() %>',
-        		shortcutCheckerName: '<%= DLFileShortcut.class.getSimpleName() %>'
+        		shortcutImageURL: '<%= themeDisplay.getPathThemeImages()+"/file_system/large/overlay_link.png" %>'
         	}
     );
 }
@@ -92,27 +90,47 @@ if (<portlet:namespace />treeViewNode == undefined){
 		    }
 		    
 		    // Files
-		    List<FileEntry> cFiles = DLAppServiceUtil.getFileEntries(repositoryId, ancestorId);	
+		    List<Object> items = DLAppServiceUtil.getFileEntriesAndFileShortcuts(repositoryId, ancestorId, WorkflowConstants.STATUS_ANY, QueryUtil.ALL_POS, QueryUtil.ALL_POS);	
 		    
-		    for (FileEntry cFileEntry: cFiles){
+		    for (Object item: items){
 		         
-		        FileVersion latestFileVersion = cFileEntry.getFileVersion();
-		        String rowCheckerName = FileEntry.class.getSimpleName();
-		        long rowCheckerId = cFileEntry.getFileEntryId();
-		        DLFileShortcut fileShortcut = (DLFileShortcut)request.getAttribute("view_entries.jsp-fileShortcut");
-		        if (fileShortcut != null) {
-		        	rowCheckerName = DLFileShortcut.class.getSimpleName();
-		        	rowCheckerId = fileShortcut.getFileShortcutId();
-		        }
+		        FileEntry cFileEntry = null;
+		        DLFileShortcut cFileShortcut = null;
+		        String rowCheckerName = "";
+		        String rowCheckerId = "";
+		        boolean isShortcut = false;
+		        long parentFolderId = 0;
 		        
+		        if (item instanceof FileEntry) {
+		            System.out.println("->file entry");
+		            cFileEntry = (FileEntry)item;
+		            cFileEntry = cFileEntry.toEscapedModel();
+		            rowCheckerName = FileEntry.class.getSimpleName();
+			        rowCheckerId = String.valueOf(cFileEntry.getFileEntryId());
+			        parentFolderId = cFileEntry.getFolderId();
+		        }
+		        else {
+		            System.out.println("->fileshortcut");		            
+		            cFileShortcut = (DLFileShortcut)item;
+		            cFileShortcut = cFileShortcut.toEscapedModel();
+		        	cFileEntry = DLAppLocalServiceUtil.getFileEntry(cFileShortcut.getToFileEntryId());
+		        	cFileEntry = cFileEntry.toEscapedModel();
+		        	rowCheckerName = DLFileShortcut.class.getSimpleName();
+		        	rowCheckerId = String.valueOf(cFileShortcut.getFileShortcutId());
+		        	isShortcut = true;
+		        	parentFolderId = cFileShortcut.getFolderId();
+		        }
+		        System.out.println("->it pass!");		        		        
+		        FileVersion latestFileVersion = cFileEntry.getFileVersion();		        
 		        %>
 		        <portlet:namespace />treeView.addContentEntry({
 		        	id : '<%= latestFileVersion.getFileEntryId() %>',
 		        	label: '<%= latestFileVersion.getTitle() %>',
+		        	shortcut: <%= isShortcut %>,
 		        	showCheckbox: '<%= DLFileEntryPermission.contains(permissionChecker, cFileEntry, ActionKeys.DELETE) || DLFileEntryPermission.contains(permissionChecker, cFileEntry, ActionKeys.UPDATE) %>',
 		        	rowCheckerId: '<%= String.valueOf(rowCheckerId) %>',
 		        	rowCheckerName: '<%= rowCheckerName %>',
-		        	parentFolderId: '<%= cFileEntry.getFolderId() %>'
+		        	parentFolderId: '<%= parentFolderId %>'		        	
 		        });
 		        <%
 		    }

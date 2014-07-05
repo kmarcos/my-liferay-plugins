@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.theme.ThemeDisplay;
+import com.liferay.portlet.documentlibrary.model.DLFileShortcut;
 import com.liferay.portlet.documentlibrary.service.DLAppServiceUtil;
 import com.liferay.portlet.documentlibrary.util.AudioProcessorUtil;
 import com.liferay.portlet.documentlibrary.util.DLUtil;
@@ -89,13 +90,22 @@ public class EnhancedDLAppServiceImpl extends EnhancedDLAppServiceBaseImpl {
                 dlFileEntry
                         .setDeletePermission(fileEntry.containsPermission(getPermissionChecker(), ActionKeys.DELETE));
                 dlFileEntry
-                        .setUpdatePermission(fileEntry.containsPermission(getPermissionChecker(), ActionKeys.UPDATE));
-                results.add(dlFileEntry);
+                        .setUpdatePermission(fileEntry.containsPermission(getPermissionChecker(), ActionKeys.UPDATE));                
 
                 setPreviewDataForEntry(fileEntry, dlFileEntry);
+                results.add(dlFileEntry);
+            }
+            if (o instanceof DLFileShortcut) {
+                DLFileShortcut dLFileShortcut = (DLFileShortcut) o;
+                FileEntry fileEntry = DLAppServiceUtil.getFileEntry(dLFileShortcut.getToFileEntryId());
+                DLFileEntry dlFileEntry = new DLFileEntry(fileEntry);
+                dlFileEntry.setShortcut(true);
+                dlFileEntry.setRowCheckerName(DLFileShortcut.class.getSimpleName());
+                dlFileEntry.setRowCheckerId(String.valueOf(dLFileShortcut.getFileShortcutId()));
+                setPreviewDataForEntry(fileEntry, dlFileEntry);
+                results.add(dlFileEntry);
             }
         }
-
         return results;
     }
 

@@ -19,14 +19,17 @@ AUI.add('rl-content-tree-view', function (A) {
 	var NODE_ATTR_PREVIEW_IMG_PREF = 'pvTreeImage';
 	var NODE_ATTR_PREVIEW_IMG_NODE = 'previewNode';
 	var NODE_ATTR_PREVIEW_URL = 'previewURL';
+	var NODE_ATTR_SHORTCUT = 'shortcut';
 	var NODE_TYPE_CHECKBOX = 'check';
 	var TPT_DELIM_OPEN = '{{';
 	var TPT_DELIM_CLOSE = '}}';
 	var TPT_ENCODED_DELIM_OPEN = '&#x7b;&#x7b;';
 	var TPT_ENCODED_DELIM_CLOSE = '&#x7d;&#x7d;';
 	var TPL_PREVIEW_NODE = '<img src="{previewFileURL}" id="{imgId}" class="treePreviewImg"/>';
+	var TPL_SHORTCUT_PREVIEW_NODE = '<img src="{shortcutImageURL}" class="shortcut-icon img-polaroid" alt="Shortcut">';
 	var WORKFLOW_STATUS_ANY = -1;
 	var REG_EXP_GLOBAL = 'g';
+	var SHORTCUT_LABEL = 'shortcut-tree-node-label';
 	 
     A.Rivet.ContentTreeView = A.Base.create('rl-content-tree-view',A.Base, [], {
 
@@ -40,11 +43,7 @@ AUI.add('rl-content-tree-view', function (A) {
     	hiddenFieldsBox: null,
     	previewBoundingBox: null,
     	viewPageBaseURL: null,
-    	fileEntryCheckerName: null,
-		folderCheckerName: null,
-		shortcutCheckerName: null,
-		journalArticleCheckerName: null,
-		journlaFolderCheckerName: null,
+    	shortcutNode: null,
 
         initializer: function () {
         
@@ -56,6 +55,7 @@ AUI.add('rl-content-tree-view', function (A) {
         	var folderId = this.get('rootFolderId');
         	var folderLabel = this.get('rootFolderLabel');
         	var checkAllEntriesId = this.get('checkAllId');
+        	var shortcutImageURL = this.get('shortcutImageURL');
         	
         	var instance = this;
         	var boundingBoxId = this.ns + this.get('treeBox');
@@ -68,6 +68,8 @@ AUI.add('rl-content-tree-view', function (A) {
         	
         	this.hiddenFieldsBox =  A.one('#'+hiddenBoundingBoxId).hide();
         	this.previewBoundingBox = A.one('#'+previewBoundingBoxId);
+        	
+        	this.shortcutNode = A.Lang.sub(TPL_SHORTCUT_PREVIEW_NODE, {"shortcutImageURL":shortcutImageURL}); 
         	
         	this.contentTree = new A.TreeViewDD(
         		      {
@@ -128,13 +130,6 @@ AUI.add('rl-content-tree-view', function (A) {
         	this.treeTarget = this.get('treeTarget');
         	if (this._isDLTarget()){
         		this.repository = this.get('repositoryId');
-        		this.fileEntryCheckerName = this.get('fileEntryCheckerName');
-            	this.folderCheckerName = this.get('folderCheckerName');
-            	this.shortcutCheckerName = this.get('shortcutCheckerName');
-        	}
-        	else{
-        		this.journalArticleCheckerName = this.get('journalArticleCheckerName');
-            	this.journlaFolderCheckerName = this.get('journlaFolderCheckerName');
         	}
         },
         
@@ -247,6 +242,9 @@ AUI.add('rl-content-tree-view', function (A) {
 	        		previewImgNode = this._createPreview(treeNode);
 	        	}       	
 	        	this.previewBoundingBox.append(previewImgNode);
+	        	if ( treeNode.get(NODE_ATTR_SHORTCUT)){
+	        		this.previewBoundingBox.append(this.shortcutNode);
+	        	}
         	}
         },      
         
@@ -283,7 +281,8 @@ AUI.add('rl-content-tree-view', function (A) {
         _createPreview: function(treeNode){
         	var previewImgId = this.ns + NODE_ATTR_PREVIEW_IMG_PREF + treeNode.get(NODE_ATTR_ID);
         	var previewURL = treeNode.get(NODE_ATTR_PREVIEW_URL);      	    
-        	var previewNode = A.Lang.sub(TPL_PREVIEW_NODE, {"imgId":previewImgId, "previewFileURL":previewURL});      	
+        	var previewNode = A.Lang.sub(TPL_PREVIEW_NODE, {"imgId":previewImgId, "previewFileURL":previewURL}); 
+        	       	
         	treeNode.set(NODE_ATTR_PREVIEW_IMG_NODE, previewNode);    	
         	return previewNode;
         },
@@ -323,20 +322,30 @@ AUI.add('rl-content-tree-view', function (A) {
        _addContentNode: function(newNodeConfig, parentNode, isFolder){
     	   var forceBindUI = true;
     	   var nodeType = '';
+    	   var label = newNodeConfig.label+'-'+newNodeConfig.id;
+    	   
     	   if (parentNode === undefined && newNodeConfig.parentFolderId !== undefined){
     		   parentNode = this.contentTree.getNodeById(newNodeConfig.parentFolderId);
        	   }
+    	   
     	   if (newNodeConfig.showCheckbox){
     		   nodeType = NODE_TYPE_CHECKBOX;
     	   }
+    	   
     	   if (parentNode === undefined){
        			parentNode = this.contentRoot;
        		}
+    	   
     	   var expanded = (newNodeConfig.expanded !== undefined)? newNodeConfig.expanded: false;
+    		   
+		   if (newNodeConfig.shortcut){
+			   label = Liferay.Language.get(SHORTCUT_LABEL)+label;
+		   }
+    	   
     	   var newNode = this.contentRoot.createNode(
 			  {
 			    id: newNodeConfig.id,
-			    label: newNodeConfig.label+'-'+newNodeConfig.id,
+			    label: label,
 			    draggable: true,
         		alwaysShowHitArea: true,
 			    leaf:!isFolder,
@@ -346,10 +355,12 @@ AUI.add('rl-content-tree-view', function (A) {
 			);        	
     	   	newNode.set(NODE_ATTR_PARENT_FOLDER, newNodeConfig.parentFolderId);
         	newNode.set(NODE_ATTR_IS_FOLDER, isFolder);
-        	newNode.set(NODE_ATTR_FULL_LOADED, newNodeConfig.fullLoaded);        	
+        	newNode.set(NODE_ATTR_FULL_LOADED, newNodeConfig.fullLoaded);
+        	newNode.set(NODE_ATTR_SHORTCUT, newNodeConfig.shortcut);
+        	
         	if (newNodeConfig.previewURL !== undefined){
         		newNode.set(NODE_ATTR_PREVIEW_URL, newNodeConfig.previewURL);
-        	}      	      	
+        	}         	
         	parentNode.appendChild(newNode);        	
         	if (forceBindUI){
         		this.contentTree.bindUI();
@@ -389,13 +400,14 @@ AUI.add('rl-content-tree-view', function (A) {
            				A.each(folders, function(item, index, collection){
            					var enableCheckbox = (item.deletePermission || item.updatePermission);
            					//if it is a file entry
-           					if (item.fileEntryId !== undefined){           						
+           					if (item.fileEntryId !== undefined){
             					instance.addContentEntry({
             						id : item.fileEntryId.toString(),
             						label: item.title,
+            						shortcut: item.shortcut,
             						showCheckbox: enableCheckbox,
-            						rowCheckerId: item.fileEntryId.toString(),
-        							rowCheckerName: instance.fileEntryCheckerName,
+            						rowCheckerId: item.rowCheckerId,
+        							rowCheckerName: item.rowCheckerName,
             						expanded: false,
                						fullLoaded: true,
                						previewURL: item.previewFileURL,
@@ -408,8 +420,8 @@ AUI.add('rl-content-tree-view', function (A) {
 	           						id : item.folderId.toString(),
 	           						label: item.name,
 	           						showCheckbox: enableCheckbox,
-	           						rowCheckerId: item.folderId.toString(),
-        							rowCheckerName: instance.folderCheckerName,
+	           						rowCheckerId: item.rowCheckerId,
+        							rowCheckerName: item.rowCheckerName,
 	           						expanded: false,
 	           						fullLoaded: false
 	           					},treeNode);
@@ -440,8 +452,8 @@ AUI.add('rl-content-tree-view', function (A) {
             						id : item.articleId.toString(),
             						label: item.title,
             						showCheckbox: enableCheckbox,
-            						rowCheckerId: item.articleId.toString(),
-        							rowCheckerName: instance.journalArticleCheckerName,
+            						rowCheckerId: item.rowCheckerId,
+        							rowCheckerName: item.rowCheckerName,
             						expanded: false,
                						fullLoaded: true,
                						previewURL: item.articleImageURL,
@@ -454,8 +466,8 @@ AUI.add('rl-content-tree-view', function (A) {
 	           						id : item.folderId.toString(),
 	           						label: item.name,
 	           						showCheckbox: enableCheckbox,
-	           						rowCheckerId: item.folderId.toString(),
-        							rowCheckerName: instance.journalFolderCheckerName,
+	           						rowCheckerId: item.rowCheckerId,
+        							rowCheckerName: item.rowCheckerName,
 	           						expanded: false,
 	           						fullLoaded: false
 	           					},treeNode);
@@ -513,19 +525,7 @@ AUI.add('rl-content-tree-view', function (A) {
             viewPageBaseURL:{
             	value: null
             },
-            fileEntryCheckerName:{
-            	value: null
-            },
-            folderCheckerName:{
-            	value: null
-            },
-            shortcutCheckerName:{
-            	value: null
-            },
-            journalArticleCheckerName:{
-            	value: null
-            },
-            journalFolderCheckerName:{
+            shortcutImageURL:{
             	value: null
             }
         }
