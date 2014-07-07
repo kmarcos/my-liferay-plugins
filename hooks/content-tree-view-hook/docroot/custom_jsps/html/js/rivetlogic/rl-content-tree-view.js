@@ -44,6 +44,7 @@ AUI.add('rl-content-tree-view', function (A) {
     	compiledItemSelectorTemplate: null,
     	hiddenFieldsBox: null,
     	previewBoundingBox: null,
+    	defaultArticleImage: null,
     	viewPageBaseURL: null,
     	shortcutNode: null,
 
@@ -52,12 +53,14 @@ AUI.add('rl-content-tree-view', function (A) {
         	this.ns = this.get('namespace');        	        	
         	this.scopeGroup = this.get('scopeGroupId');
         	this._getTargetAttributes();        	
-        	this.viewPageBaseURL = this.get('viewPageBaseURL');   	
+        	this.viewPageBaseURL = this.get('viewPageBaseURL');   
+        	this.defaultArticleImage = this.get('defaultArticleImage');
         	
         	var folderId = this.get('rootFolderId');
         	var folderLabel = this.get('rootFolderLabel');
         	var checkAllEntriesId = this.get('checkAllId');
         	var shortcutImageURL = this.get('shortcutImageURL');
+        	
         	
         	var instance = this;
         	var boundingBoxId = this.ns + this.get('treeBox');
@@ -475,9 +478,12 @@ AUI.add('rl-content-tree-view', function (A) {
            			},
            			function(entries) {
            				A.each(entries, function(item, index, collection){
+           					console.log(item);
            					var enableCheckbox = (item.deletePermission || item.updatePermission);
            					//if it is an article
-           					if (item.articleId !== undefined){           						
+           					if (item.articleId !== undefined){     
+           						enableCheckbox = (enableCheckbox || item.expirePermission);
+           						var articleImageURL = instance._getArticleImageURL(item);           						
             					instance.addContentEntry({
             						id : item.articleId.toString(),
             						label: item.title,
@@ -486,7 +492,7 @@ AUI.add('rl-content-tree-view', function (A) {
         							rowCheckerName: item.rowCheckerName,
             						expanded: false,
                						fullLoaded: true,
-               						previewURL: item.articleImageURL,
+               						previewURL: articleImageURL,
             					},treeNode);
            					}
            					//If it is a folder
@@ -508,6 +514,18 @@ AUI.add('rl-content-tree-view', function (A) {
            	        	treeNode.expand();
            			}
            		);
+        },
+        
+        _getArticleImageURL: function(item){
+        	var articleImageURL = item.articleImageURL;
+			console.log(articleImageURL);
+			if (articleImageURL === null ||articleImageURL === undefined){
+				articleImageURL = this.defaultArticleImage;
+			}
+			else if (A.Lang.String.startsWith(articleImageURL, "/journal/article")){
+				articleImageURL = themeDisplay.getPathImage()+articleImageURL;
+			}
+			return articleImageURL;
         },
         
         _isFolder: function(treeNode){
@@ -558,7 +576,10 @@ AUI.add('rl-content-tree-view', function (A) {
             },
             shortcutImageURL:{
             	value: null
-            }
+            },
+            defaultArticleImage:{
+            	value: null
+            },
         }
     });
  

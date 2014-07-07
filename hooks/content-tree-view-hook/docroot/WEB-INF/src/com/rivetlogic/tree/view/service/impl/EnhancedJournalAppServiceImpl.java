@@ -85,6 +85,7 @@ public class EnhancedJournalAppServiceImpl extends EnhancedJournalAppServiceBase
                 wcArticle.setArticleImageURL(getArticleImageURL(article));
                 wcArticle.setDeletePermission(hasJournalArticlePermission(article, ActionKeys.DELETE));
                 wcArticle.setUpdatePermission(hasJournalArticlePermission(article, ActionKeys.UPDATE));
+                wcArticle.setExpirePermission(hasJournalArticlePermission(article, ActionKeys.EXPIRE));
                 results.add(wcArticle);
             }
         }
@@ -193,10 +194,11 @@ public class EnhancedJournalAppServiceImpl extends EnhancedJournalAppServiceBase
      */
     private String getArticleImageURL(JournalArticle article) {
         if (!article.isSmallImage()) {
-            return "/file_system/large/article.png";
+            return null;
         }
 
         if (Validator.isNotNull(article.getSmallImageURL())) {
+            System.out.println("OJO AQUI "+article.getSmallImageURL());
             return article.getSmallImageURL();
         }
 

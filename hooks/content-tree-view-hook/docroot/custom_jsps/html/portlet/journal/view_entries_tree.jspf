@@ -55,13 +55,10 @@ if (<portlet:namespace />treeViewNode == undefined){
         		rootFolderLabel: '<%= treeFolderTitle %>',
         		checkAllId: '<%= RowChecker.ALL_ROW_IDS %>',
         		viewPageBaseURL: '<%= viewArticleURL %>',
-        		journalArticleCheckerName: '<%= JournalArticle.class.getSimpleName() %>',
-        		journalFolderCheckerName: '<%= JournalFolder.class.getSimpleName() %>',
+        		defaultArticleImage: '<%= themeDisplay.getPathThemeImages() + "/file_system/large/article.png" %>'
         	}
     );
 }
-
-<%--
 
 <% 
 	// If current folder is not root (home)
@@ -80,13 +77,11 @@ if (<portlet:namespace />treeViewNode == undefined){
 			    }
 	        	%>
 		    	<portlet:namespace />treeView.addContentFolder({
-					id: '<%= cFolder.getFolderId() %>',
+					id: '<%= String.valueOf(cFolder.getFolderId()) %>',
 					label: '<%= cFolder.getName() %>',
-					title: '<%= cFolder.getName() %>',
-					description: '<%= cFolder.getDescription() %>',
-					showCheckbox: '<%= DLFolderPermission.contains(permissionChecker, cFolder, ActionKeys.DELETE) || DLFolderPermission.contains(permissionChecker, cFolder, ActionKeys.UPDATE) %>',
+					showCheckbox: '<%= JournalFolderPermission.contains(permissionChecker, cFolder, ActionKeys.DELETE) || JournalFolderPermission.contains(permissionChecker, cFolder, ActionKeys.UPDATE) %>',
 					rowCheckerId: '<%= String.valueOf(cFolder.getFolderId()) %>',
-					rowCheckerName: '<%= Folder.class.getSimpleName() %>',
+					rowCheckerName: '<%= JournalFolder.class.getSimpleName() %>',
 					parentFolderId: '<%= cFolder.getParentFolderId() %>',
 					expanded : <%= isAncestor %>,
    			    	fullLoaded : <%= isAncestor %>
@@ -99,31 +94,30 @@ if (<portlet:namespace />treeViewNode == undefined){
 		    
 		    for (JournalArticle cArticle: cArticles){
 		         
-		        FileVersion latestFileVersion = cFileEntry.getFileVersion();
-		        String rowCheckerName = FileEntry.class.getSimpleName();
-		        long rowCheckerId = cFileEntry.getFileEntryId();
-		        DLFileShortcut fileShortcut = (DLFileShortcut)request.getAttribute("view_entries.jsp-fileShortcut");
-		        if (fileShortcut != null) {
-		        	rowCheckerName = DLFileShortcut.class.getSimpleName();
-		        	rowCheckerId = fileShortcut.getFileShortcutId();
-		        }
+		        PortletURL tempRowURL = liferayPortletResponse.createRenderURL();
+				tempRowURL.setParameter("struts_action", "/journal/edit_article");
+				tempRowURL.setParameter("redirect", currentURL);
+				tempRowURL.setParameter("groupId", String.valueOf(cArticle.getGroupId()));
+				tempRowURL.setParameter("folderId", String.valueOf(cArticle.getFolderId()));
+				tempRowURL.setParameter("articleId", cArticle.getArticleId());
+				
+		        String articleImageURL = cArticle.getArticleImageURL(themeDisplay);
 		        
-		        %>
+		        %>		        
 		        <portlet:namespace />treeView.addContentEntry({
-		        	id : '<%= latestFileVersion.getFileEntryId() %>',
-		        	label: '<%= latestFileVersion.getTitle() %>',
-		        	title: '<%= latestFileVersion.getTitle() %>',
-		        	description: '<%= latestFileVersion.getDescription() %>',
-		        	showCheckbox: '<%= DLFileEntryPermission.contains(permissionChecker, cFileEntry, ActionKeys.DELETE) || DLFileEntryPermission.contains(permissionChecker, cFileEntry, ActionKeys.UPDATE) %>',
-		        	rowCheckerId: '<%= String.valueOf(rowCheckerId) %>',
-		        	rowCheckerName: '<%= rowCheckerName %>',
-		        	parentFolderId: '<%= cFileEntry.getFolderId() %>'
-		        });
+					id : '<%= cArticle.getArticleId() %>',
+					label: '<%= cArticle.getTitle(locale) %>',
+					showCheckbox: '<%= JournalArticlePermission.contains(permissionChecker, cArticle, ActionKeys.DELETE) || JournalArticlePermission.contains(permissionChecker, cArticle, ActionKeys.EXPIRE) || JournalArticlePermission.contains(permissionChecker, cArticle, ActionKeys.UPDATE) %>',
+					rowCheckerId: '<%= String.valueOf(cArticle.getArticleId()) %>',
+					rowCheckerName: '<%= JournalArticle.class.getSimpleName() %>',
+					parentFolderId: '<%= cArticle.getFolderId() %>',
+					previewURL:'<%= Validator.isNotNull(articleImageURL) ? articleImageURL : themeDisplay.getPathThemeImages() + "/file_system/large/article.png" %>',
+					viewURL: '<%= tempRowURL %>'
+				});
 		        <%
 		    }
 		}
 	}
 %>
- --%>
 </aui:script>
 </c:if>

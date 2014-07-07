@@ -16,6 +16,7 @@ public class WCArticle implements Serializable {
     private long groupId;
     private boolean deletePermission;
     private boolean updatePermission;
+    private boolean expirePermission;
     private String articleImageURL = "";
     private String rowCheckerId = "";
     private String rowCheckerName = "";
@@ -86,6 +87,14 @@ public class WCArticle implements Serializable {
 
     public void setUpdatePermission(boolean updatePermission) {
         this.updatePermission = updatePermission;
+    }
+
+    public boolean isExpirePermission() {
+        return expirePermission;
+    }
+
+    public void setExpirePermission(boolean expirePermission) {
+        this.expirePermission = expirePermission;
     }
 
     public String getArticleImageURL() {

@@ -12,7 +12,7 @@ PortletURL tempRowURL = (PortletURL)request.getAttribute("view_entries.jsp-tempR
 
 	<portlet:namespace />treeView.addContentFolder({
 		id: '<%= String.valueOf(folder.getFolderId()) %>',
-		label: '<%= folder.getDescription() %>',
+		label: '<%= folder.getName() %>',
 		showCheckbox: '<%= JournalFolderPermission.contains(permissionChecker, folder, ActionKeys.DELETE) || JournalFolderPermission.contains(permissionChecker, folder, ActionKeys.UPDATE) %>',
 		rowCheckerId: '<%= String.valueOf(folder.getFolderId()) %>',
 		rowCheckerName: '<%= JournalFolder.class.getSimpleName() %>',
