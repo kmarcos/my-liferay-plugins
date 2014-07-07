@@ -102,7 +102,6 @@ if (<portlet:namespace />treeViewNode == undefined){
 		        long parentFolderId = 0;
 		        
 		        if (item instanceof FileEntry) {
-		            System.out.println("->file entry");
 		            fileEntry = (FileEntry)item;
 		            fileEntry = fileEntry.toEscapedModel();
 		            rowCheckerName = FileEntry.class.getSimpleName();
@@ -110,8 +109,7 @@ if (<portlet:namespace />treeViewNode == undefined){
 			        parentFolderId = fileEntry.getFolderId();
 			       
 		        }
-		        else {
-		            System.out.println("->fileshortcut");		            
+		        else {		            
 		            fileShortcut = (DLFileShortcut)item;
 		            fileShortcut = fileShortcut.toEscapedModel();
 		        	fileEntry = DLAppLocalServiceUtil.getFileEntry(fileShortcut.getToFileEntryId());
@@ -120,8 +118,7 @@ if (<portlet:namespace />treeViewNode == undefined){
 		        	rowCheckerId = String.valueOf(fileShortcut.getFileShortcutId());
 		        	isShortcut = true;
 		        	parentFolderId = fileShortcut.getFolderId();
-		        }
-		        System.out.println("->it pass with fe!"+fileEntry.getFileEntryId());		        		        
+		        }		        		        
 		        FileVersion latestFileVersion = fileEntry.getFileVersion();
 		        PortletURL tempRowURL = liferayPortletResponse.createRenderURL();
 				tempRowURL.setParameter("struts_action", "/document_library/view_file_entry");
