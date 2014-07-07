@@ -91,7 +91,6 @@ public class EnhancedDLAppServiceImpl extends EnhancedDLAppServiceBaseImpl {
                         .setDeletePermission(fileEntry.containsPermission(getPermissionChecker(), ActionKeys.DELETE));
                 dlFileEntry
                         .setUpdatePermission(fileEntry.containsPermission(getPermissionChecker(), ActionKeys.UPDATE));                
-
                 setPreviewDataForEntry(fileEntry, dlFileEntry);
                 results.add(dlFileEntry);
             }
@@ -99,6 +98,10 @@ public class EnhancedDLAppServiceImpl extends EnhancedDLAppServiceBaseImpl {
                 DLFileShortcut dLFileShortcut = (DLFileShortcut) o;
                 FileEntry fileEntry = DLAppServiceUtil.getFileEntry(dLFileShortcut.getToFileEntryId());
                 DLFileEntry dlFileEntry = new DLFileEntry(fileEntry);
+                dlFileEntry
+                        .setDeletePermission(fileEntry.containsPermission(getPermissionChecker(), ActionKeys.DELETE));
+                dlFileEntry
+                        .setUpdatePermission(fileEntry.containsPermission(getPermissionChecker(), ActionKeys.UPDATE));
                 dlFileEntry.setShortcut(true);
                 dlFileEntry.setRowCheckerName(DLFileShortcut.class.getSimpleName());
                 dlFileEntry.setRowCheckerId(String.valueOf(dLFileShortcut.getFileShortcutId()));

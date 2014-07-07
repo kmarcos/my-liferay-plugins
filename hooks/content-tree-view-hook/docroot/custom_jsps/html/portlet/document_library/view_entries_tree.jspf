@@ -94,8 +94,8 @@ if (<portlet:namespace />treeViewNode == undefined){
 		    
 		    for (Object item: items){
 		         
-		        FileEntry cFileEntry = null;
-		        DLFileShortcut cFileShortcut = null;
+		        FileEntry fileEntry = null;
+		        DLFileShortcut fileShortcut = null;
 		        String rowCheckerName = "";
 		        String rowCheckerId = "";
 		        boolean isShortcut = false;
@@ -103,34 +103,42 @@ if (<portlet:namespace />treeViewNode == undefined){
 		        
 		        if (item instanceof FileEntry) {
 		            System.out.println("->file entry");
-		            cFileEntry = (FileEntry)item;
-		            cFileEntry = cFileEntry.toEscapedModel();
+		            fileEntry = (FileEntry)item;
+		            fileEntry = fileEntry.toEscapedModel();
 		            rowCheckerName = FileEntry.class.getSimpleName();
-			        rowCheckerId = String.valueOf(cFileEntry.getFileEntryId());
-			        parentFolderId = cFileEntry.getFolderId();
+			        rowCheckerId = String.valueOf(fileEntry.getFileEntryId());
+			        parentFolderId = fileEntry.getFolderId();
+			       
 		        }
 		        else {
 		            System.out.println("->fileshortcut");		            
-		            cFileShortcut = (DLFileShortcut)item;
-		            cFileShortcut = cFileShortcut.toEscapedModel();
-		        	cFileEntry = DLAppLocalServiceUtil.getFileEntry(cFileShortcut.getToFileEntryId());
-		        	cFileEntry = cFileEntry.toEscapedModel();
+		            fileShortcut = (DLFileShortcut)item;
+		            fileShortcut = fileShortcut.toEscapedModel();
+		        	fileEntry = DLAppLocalServiceUtil.getFileEntry(fileShortcut.getToFileEntryId());
+		        	fileEntry = fileEntry.toEscapedModel();
 		        	rowCheckerName = DLFileShortcut.class.getSimpleName();
-		        	rowCheckerId = String.valueOf(cFileShortcut.getFileShortcutId());
+		        	rowCheckerId = String.valueOf(fileShortcut.getFileShortcutId());
 		        	isShortcut = true;
-		        	parentFolderId = cFileShortcut.getFolderId();
+		        	parentFolderId = fileShortcut.getFolderId();
 		        }
-		        System.out.println("->it pass!");		        		        
-		        FileVersion latestFileVersion = cFileEntry.getFileVersion();		        
+		        System.out.println("->it pass with fe!"+fileEntry.getFileEntryId());		        		        
+		        FileVersion latestFileVersion = fileEntry.getFileVersion();
+		        PortletURL tempRowURL = liferayPortletResponse.createRenderURL();
+				tempRowURL.setParameter("struts_action", "/document_library/view_file_entry");
+				tempRowURL.setParameter("redirect", HttpUtil.removeParameter(currentURL, liferayPortletResponse.getNamespace() + "ajax"));
+				tempRowURL.setParameter("fileEntryId", String.valueOf(latestFileVersion.getFileEntryId()));
 		        %>
+		        <%@ include file="/html/portlet/document_library/preview_query.jspf" %>
 		        <portlet:namespace />treeView.addContentEntry({
 		        	id : '<%= latestFileVersion.getFileEntryId() %>',
 		        	label: '<%= latestFileVersion.getTitle() %>',
 		        	shortcut: <%= isShortcut %>,
-		        	showCheckbox: '<%= DLFileEntryPermission.contains(permissionChecker, cFileEntry, ActionKeys.DELETE) || DLFileEntryPermission.contains(permissionChecker, cFileEntry, ActionKeys.UPDATE) %>',
+		        	showCheckbox: '<%= DLFileEntryPermission.contains(permissionChecker, fileEntry, ActionKeys.DELETE) || DLFileEntryPermission.contains(permissionChecker, fileEntry, ActionKeys.UPDATE) %>',
 		        	rowCheckerId: '<%= String.valueOf(rowCheckerId) %>',
 		        	rowCheckerName: '<%= rowCheckerName %>',
-		        	parentFolderId: '<%= parentFolderId %>'		        	
+		        	parentFolderId: '<%= parentFolderId %>',
+		        	previewURL:'<%= previewFileURL /* DLUtil.getThumbnailSrc(fileEntry, latestFileVersion, fileShortcut, themeDisplay)*/ %>',
+					viewURL: '<%= tempRowURL %>'  	
 		        });
 		        <%
 		    }

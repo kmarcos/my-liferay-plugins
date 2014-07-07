@@ -13,6 +13,7 @@ AUI.add('rl-content-tree-view', function (A) {
 	var PARENT_NODE = 'parentNode';
 	var NODE = 'node';
 	var NODE_ATTR_ID = 'id';
+	var NODE_ATTR_ENTRY_ID = 'entryId';
 	var NODE_ATTR_IS_FOLDER = 'isFolder';
 	var NODE_ATTR_PARENT_FOLDER = 'parentFolderId';
 	var NODE_ATTR_FULL_LOADED = 'fullLoaded';
@@ -28,6 +29,7 @@ AUI.add('rl-content-tree-view', function (A) {
 	var TPL_PREVIEW_NODE = '<img src="{previewFileURL}" id="{imgId}" class="treePreviewImg"/>';
 	var TPL_SHORTCUT_PREVIEW_NODE = '<img src="{shortcutImageURL}" class="shortcut-icon img-polaroid" alt="Shortcut">';
 	var WORKFLOW_STATUS_ANY = -1;
+	var QUERY_ALL = -1;
 	var REG_EXP_GLOBAL = 'g';
 	var SHORTCUT_LABEL = 'shortcut-tree-node-label';
 	 
@@ -174,7 +176,13 @@ AUI.add('rl-content-tree-view', function (A) {
 	        		this._moveContentFolder(node, target);
 	        	}
 	        	else{
-	        		this._moveContentEntry(node, target);
+	        		var isShortcut = (node.get(NODE_ATTR_SHORTCUT));
+	        		if (!isShortcut){
+	        			this._moveContentEntry(node, target);
+	        		}
+	        		else{
+	        			this._moveFileShortcut(node, target);
+	        		}
 	        	}
         	}       	        	
         },
@@ -211,6 +219,22 @@ AUI.add('rl-content-tree-view', function (A) {
         	);
         },
         
+        _moveFileShortcut: function(entry, target){        	
+        	 Liferay.Service(
+           		 '/dlapp/update-file-shortcut',
+           		 {
+           		    fileShortcutId: entry.get(NODE_ATTR_ID),
+           		    folderId: target.get(NODE_ATTR_ID),
+           		    toFileEntryId: entry.get(NODE_ATTR_ENTRY_ID),
+    				serviceContext: JSON.stringify(
+                        {
+                        	scopeGroupId: this.repository
+                        }
+                    )
+           		 }
+       		);
+        },
+        
         _mouseOverHandler: function(event){
         	event.stopPropagation();
         	var treeNode = this.contentTree.getNodeById(event.currentTarget.get(NODE_ATTR_ID));
@@ -222,7 +246,7 @@ AUI.add('rl-content-tree-view', function (A) {
         	var treeNode = this.contentTree.getNodeById(event.currentTarget.get(NODE_ATTR_ID));
 			var viewURL = Liferay.PortletURL.createURL(this.viewPageBaseURL);
 			if (this._isDLTarget()){
-				viewURL.setParameter("fileEntryId", treeNode.get(NODE_ATTR_ID));
+				viewURL.setParameter("fileEntryId", treeNode.get(NODE_ATTR_ENTRY_ID));
     		}
 			else{
 				viewURL.setParameter("articleId", treeNode.get(NODE_ATTR_ID));
@@ -320,9 +344,12 @@ AUI.add('rl-content-tree-view', function (A) {
         },
                     
        _addContentNode: function(newNodeConfig, parentNode, isFolder){
+    	   console.log("adding item with config: ");
+    	   console.log(newNodeConfig);
     	   var forceBindUI = true;
     	   var nodeType = '';
     	   var label = newNodeConfig.label+'-'+newNodeConfig.id;
+    	   var nodeId = newNodeConfig.id;
     	   
     	   if (parentNode === undefined && newNodeConfig.parentFolderId !== undefined){
     		   parentNode = this.contentTree.getNodeById(newNodeConfig.parentFolderId);
@@ -340,11 +367,12 @@ AUI.add('rl-content-tree-view', function (A) {
     		   
 		   if (newNodeConfig.shortcut){
 			   label = Liferay.Language.get(SHORTCUT_LABEL)+label;
+			   nodeId = newNodeConfig.rowCheckerId;
 		   }
-    	   
+		      	   
     	   var newNode = this.contentRoot.createNode(
 			  {
-			    id: newNodeConfig.id,
+			    id: nodeId,
 			    label: label,
 			    draggable: true,
         		alwaysShowHitArea: true,
@@ -357,6 +385,7 @@ AUI.add('rl-content-tree-view', function (A) {
         	newNode.set(NODE_ATTR_IS_FOLDER, isFolder);
         	newNode.set(NODE_ATTR_FULL_LOADED, newNodeConfig.fullLoaded);
         	newNode.set(NODE_ATTR_SHORTCUT, newNodeConfig.shortcut);
+        	newNode.set(NODE_ATTR_ENTRY_ID, newNodeConfig.id);
         	
         	if (newNodeConfig.previewURL !== undefined){
         		newNode.set(NODE_ATTR_PREVIEW_URL, newNodeConfig.previewURL);
@@ -393,11 +422,11 @@ AUI.add('rl-content-tree-view', function (A) {
            				folderId: treeNode.get(NODE_ATTR_ID),
            				status: WORKFLOW_STATUS_ANY,
            				includeMountFolders :true,
-        				start: -1,
-        				end: -1
+        				start: QUERY_ALL,
+        				end: QUERY_ALL
            			},
-           			function(folders) {
-           				A.each(folders, function(item, index, collection){
+           			function(entries) {
+           				A.each(entries, function(item, index, collection){
            					var enableCheckbox = (item.deletePermission || item.updatePermission);
            					//if it is a file entry
            					if (item.fileEntryId !== undefined){
@@ -427,10 +456,11 @@ AUI.add('rl-content-tree-view', function (A) {
 	           					},treeNode);
            					}
            				});
+           				
+           				treeNode.set(NODE_ATTR_FULL_LOADED, true);
+           	        	treeNode.expand();
            			}
-           		);        	   
-        	treeNode.set(NODE_ATTR_FULL_LOADED, true);
-        	treeNode.expand();
+           		); 
         },
         
         _getWCChildren: function(treeNode, instance) {        	   
@@ -440,11 +470,11 @@ AUI.add('rl-content-tree-view', function (A) {
            			{
            				groupId: instance.scopeGroup,
            				folderId: treeNode.get(NODE_ATTR_ID),
-        				start: -1,
-        				end: -1
+        				start: QUERY_ALL,
+        				end: QUERY_ALL
            			},
-           			function(folders) {
-           				A.each(folders, function(item, index, collection){
+           			function(entries) {
+           				A.each(entries, function(item, index, collection){
            					var enableCheckbox = (item.deletePermission || item.updatePermission);
            					//if it is an article
            					if (item.articleId !== undefined){           						
@@ -473,10 +503,11 @@ AUI.add('rl-content-tree-view', function (A) {
 	           					},treeNode);
            					}
            				});
+           				
+           				treeNode.set(NODE_ATTR_FULL_LOADED, true);
+           	        	treeNode.expand();
            			}
-           		);        	   
-        	treeNode.set(NODE_ATTR_FULL_LOADED, true);
-        	treeNode.expand();
+           		);
         },
         
         _isFolder: function(treeNode){
