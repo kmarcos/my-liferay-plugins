@@ -12,7 +12,8 @@
 
 	// Root will be always the same (home)
 	long treeFolderId = JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID;
-	String treeFolderTitle = LanguageUtil.get(pageContext, displayTerms.getNavigation());
+	String treeTitle = (displayTerms.getNavigation().isEmpty()?"home":displayTerms.getNavigation());
+	String treeFolderTitle = LanguageUtil.get(pageContext, treeTitle);
 	
 	// Current folder could be different to root
 	long currFolderId = treeFolderId;

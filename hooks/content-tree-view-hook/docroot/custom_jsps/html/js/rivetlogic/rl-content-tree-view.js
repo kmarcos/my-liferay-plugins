@@ -51,7 +51,7 @@ AUI.add('rl-content-tree-view', function (A) {
         initializer: function () {
         
         	this.ns = this.get('namespace');        	        	
-        	this.scopeGroup = this.get('scopeGroupId');
+        	this.scopeGroupId = this.get('scopeGroupId');
         	this._getTargetAttributes();        	
         	this.viewPageBaseURL = this.get('viewPageBaseURL');   
         	this.defaultArticleImage = this.get('defaultArticleImage');
@@ -175,22 +175,40 @@ AUI.add('rl-content-tree-view', function (A) {
         	}
         	var parentNode = node.get(PARENT_NODE);
         	if (parentNode.get(NODE_ATTR_ID) != target.get(NODE_ATTR_ID)){
-	        	if (this._isFolder(node)){
-	        		this._moveContentFolder(node, target);
-	        	}
-	        	else{
-	        		var isShortcut = (node.get(NODE_ATTR_SHORTCUT));
-	        		if (!isShortcut){
-	        			this._moveContentEntry(node, target);
-	        		}
-	        		else{
-	        			this._moveFileShortcut(node, target);
-	        		}
-	        	}
+        		if (this._isDLTarget()){
+        			this._moveDLContentNode(node, target);
+        		}
+        		else{
+        			this._moveJournalContentNode(node, target);
+        		}
         	}       	        	
         },
         
-        _moveContentFolder: function(folder, target){
+        _moveDLContentNode: function(node, target){
+        	if (this._isFolder(node)){
+        		this._moveDLFolder(node, target);
+        	}
+        	else{
+        		var isShortcut = (node.get(NODE_ATTR_SHORTCUT));
+        		if (!isShortcut){
+        			this._moveDLFileEntry(node, target);
+        		}
+        		else{
+        			this._moveDLFileShortcut(node, target);
+        		}
+        	}     	        	
+        },
+        
+        _moveJournalContentNode: function(node, target){
+        	if (this._isFolder(node)){
+        		this._moveJournalFolder(node, target);
+        	}
+        	else{
+    			this._moveJournalArticle(node, target);
+        	}     	        	
+        },
+        
+        _moveDLFolder: function(folder, target){
         	Liferay.Service(
     			'/dlapp/move-folder',
     			{
@@ -206,7 +224,7 @@ AUI.add('rl-content-tree-view', function (A) {
         	);
         },
         
-        _moveContentEntry: function(entry, target){        	
+        _moveDLFileEntry: function(entry, target){        	
         	Liferay.Service(
     			'/dlapp/move-file-entry',
     			{
@@ -222,7 +240,7 @@ AUI.add('rl-content-tree-view', function (A) {
         	);
         },
         
-        _moveFileShortcut: function(entry, target){        	
+        _moveDLFileShortcut: function(entry, target){        	
         	 Liferay.Service(
            		 '/dlapp/update-file-shortcut',
            		 {
@@ -236,6 +254,32 @@ AUI.add('rl-content-tree-view', function (A) {
                     )
            		 }
        		);
+        },
+        
+        _moveJournalFolder: function(folder, target){
+        	Liferay.Service(
+    			'/journalfolder/move-folder',
+    			{
+    				folderId: folder.get(NODE_ATTR_ID),
+    				parentFolderId: target.get(NODE_ATTR_ID),
+    				serviceContext: JSON.stringify(
+                        {
+                        	scopeGroupId: this.scopeGroupId
+                        }
+                    )
+    			}
+        	);
+        },
+        
+        _moveJournalArticle: function(entry, target){        	
+        	Liferay.Service(
+    			'/journalarticle/move-article',
+    			{
+    				groupId: this.scopeGroupId,        				
+    				articleId: entry.get(NODE_ATTR_ID),
+    				newFolderId: target.get(NODE_ATTR_ID)
+    			}
+        	);
         },
         
         _mouseOverHandler: function(event){
@@ -254,7 +298,7 @@ AUI.add('rl-content-tree-view', function (A) {
 			else{
 				viewURL.setParameter("articleId", treeNode.get(NODE_ATTR_ID));
 				viewURL.setParameter("folderId", treeNode.get(NODE_ATTR_PARENT_FOLDER));
-				viewURL.setParameter("groupId", this.scopeGroup);
+				viewURL.setParameter("groupId", this.scopeGroupId);
 			}
 			
 			Liferay.Util.getOpener().location.href = viewURL.toString();
@@ -471,7 +515,7 @@ AUI.add('rl-content-tree-view', function (A) {
         	Liferay.Service(
            			'/content-tree-view-hook.enhancedjournalapp/get-folders-and-articles',
            			{
-           				groupId: instance.scopeGroup,
+           				groupId: instance.scopeGroupId,
            				folderId: treeNode.get(NODE_ATTR_ID),
         				start: QUERY_ALL,
         				end: QUERY_ALL
