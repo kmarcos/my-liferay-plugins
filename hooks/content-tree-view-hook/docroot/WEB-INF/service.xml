@@ -3,7 +3,7 @@
 <service-builder package-path="com.rivetlogic.tree.view">
 
 	<author>rivetlogic</author>
-	<namespace>RL_TreeView</namespace>
+	<namespace>rivetlogic_treeview</namespace>
 
 	<entity name="EnhancedDLApp" remote-service="true" />
 	<entity name="EnhancedJournalApp" remote-service="true" />

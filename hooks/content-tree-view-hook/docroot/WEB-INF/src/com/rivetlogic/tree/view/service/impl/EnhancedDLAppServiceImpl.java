@@ -1,4 +1,8 @@
 /**
+ * Copyright (C) 2014 Rivet Logic Corporation. All rights reserved.
+ */
+
+/**
  * Copyright (c) 2000-2013 Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
@@ -90,7 +94,7 @@ public class EnhancedDLAppServiceImpl extends EnhancedDLAppServiceBaseImpl {
                 dlFileEntry
                         .setDeletePermission(fileEntry.containsPermission(getPermissionChecker(), ActionKeys.DELETE));
                 dlFileEntry
-                        .setUpdatePermission(fileEntry.containsPermission(getPermissionChecker(), ActionKeys.UPDATE));                
+                        .setUpdatePermission(fileEntry.containsPermission(getPermissionChecker(), ActionKeys.UPDATE));
                 setPreviewDataForEntry(fileEntry, dlFileEntry);
                 results.add(dlFileEntry);
             }
@@ -125,10 +129,15 @@ public class EnhancedDLAppServiceImpl extends EnhancedDLAppServiceBaseImpl {
 
         ThemeDisplay themeDisplay = null;
         FileVersion latestFileVersion;
+        // Using string variable for type parameter
+        String PARAMETER_TYPE = "&type=";
 
         try {
             latestFileVersion = fileEntry.getLatestFileVersion();
-        } catch (Exception e) {
+        } catch (PortalException e) {
+            log.error(e);
+            return;
+        } catch (SystemException e) {
             log.error(e);
             return;
         }
@@ -167,8 +176,9 @@ public class EnhancedDLAppServiceImpl extends EnhancedDLAppServiceBaseImpl {
                 previewFileURLs = new String[PropsValues.DL_FILE_ENTRY_PREVIEW_AUDIO_CONTAINERS.length];
 
                 for (int i = 0; i < PropsValues.DL_FILE_ENTRY_PREVIEW_AUDIO_CONTAINERS.length; i++) {
-                    previewFileURLs[i] = DLUtil.getPreviewURL(fileEntry, latestFileVersion, themeDisplay,
-                            previewQueryString + "&type=" + PropsValues.DL_FILE_ENTRY_PREVIEW_AUDIO_CONTAINERS[i]);
+                    previewFileURLs[i] = DLUtil
+                            .getPreviewURL(fileEntry, latestFileVersion, themeDisplay, previewQueryString
+                                    + PARAMETER_TYPE + PropsValues.DL_FILE_ENTRY_PREVIEW_AUDIO_CONTAINERS[i]);
                 }
             } else if (hasVideo) {
                 if (PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_CONTAINERS.length > 0) {
@@ -176,7 +186,8 @@ public class EnhancedDLAppServiceImpl extends EnhancedDLAppServiceBaseImpl {
 
                     for (int i = 0; i < PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_CONTAINERS.length; i++) {
                         previewFileURLs[i] = DLUtil.getPreviewURL(fileEntry, latestFileVersion, themeDisplay,
-                                previewQueryString + "&type=" + PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_CONTAINERS[i]);
+                                previewQueryString + PARAMETER_TYPE
+                                        + PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_CONTAINERS[i]);
                     }
                 } else {
                     previewFileURLs = new String[1];

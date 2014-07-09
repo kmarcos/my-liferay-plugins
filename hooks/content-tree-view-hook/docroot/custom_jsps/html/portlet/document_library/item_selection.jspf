@@ -1,4 +1,0 @@
-<script id="<portlet:namespace />item-selector-template" type="text/x-handlebars-template">
-	<c:set var="rowIds" value="<%= RowChecker.ROW_IDS %>" />
-	<aui:input cssClass="overlay entry-selector" label="" value="{{rowCheckerId}}" name="${rowIds}{{rowCheckerName}}" type="checkbox"  />
-</script>

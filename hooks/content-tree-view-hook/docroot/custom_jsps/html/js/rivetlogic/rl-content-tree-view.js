@@ -1,3 +1,20 @@
+/**
+ * Copyright (C) 2005-2014 Rivet Logic Corporation.
+ * 
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; version 3 of the License.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 51
+ * Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
 AUI.add('rl-content-tree-view', function (A) {
 	
 	A.namespace('Rivet');
@@ -82,7 +99,7 @@ AUI.add('rl-content-tree-view', function (A) {
         		        children: [
         		        	{
         		        		id: folderId,
-        		        		label: folderLabel+'-'+folderId,
+        		        		label: folderLabel,
         		        		draggable: false,
         		        		alwaysShowHitArea: true,
         		        		leaf:false,
@@ -153,20 +170,15 @@ AUI.add('rl-content-tree-view', function (A) {
             else{
             	this._moveContentNode(dragTreeNode,dropTreeNode);
             }
-            console.log("drophit");
         },
         
         _afterDropHitHandler: function(event){     	
             var dropNode = event.drop.get(NODE).get(PARENT_NODE);
             var dropTreeNode = dropNode.getData(TREE_NODE);
-            
-            //TODO: Review this, it would be better do this after drag node is added
-            // If drop target is not loaded yet, we must empty to load all children
         	if (!(this._isFullLoaded(dropTreeNode))){
         		dropTreeNode.empty();
     			this._getChildren(dropTreeNode, this);
     		}
-        	console.log("after drophit");
         },       
         
         _moveContentNode: function(node, target){
@@ -391,8 +403,6 @@ AUI.add('rl-content-tree-view', function (A) {
         },
                     
        _addContentNode: function(newNodeConfig, parentNode, isFolder){
-    	   console.log("adding item with config: ");
-    	   console.log(newNodeConfig);
     	   var forceBindUI = true;
     	   var nodeType = '';
     	   var label = newNodeConfig.label+'-'+newNodeConfig.id;
@@ -522,7 +532,6 @@ AUI.add('rl-content-tree-view', function (A) {
            			},
            			function(entries) {
            				A.each(entries, function(item, index, collection){
-           					console.log(item);
            					var enableCheckbox = (item.deletePermission || item.updatePermission);
            					//if it is an article
            					if (item.articleId !== undefined){     
@@ -562,7 +571,6 @@ AUI.add('rl-content-tree-view', function (A) {
         
         _getArticleImageURL: function(item){
         	var articleImageURL = item.articleImageURL;
-			console.log(articleImageURL);
 			if (articleImageURL === null ||articleImageURL === undefined){
 				articleImageURL = this.defaultArticleImage;
 			}

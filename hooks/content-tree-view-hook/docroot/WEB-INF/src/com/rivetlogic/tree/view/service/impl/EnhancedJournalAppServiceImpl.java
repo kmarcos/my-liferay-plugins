@@ -1,4 +1,8 @@
 /**
+ * Copyright (C) 2014 Rivet Logic Corporation. All rights reserved.
+ */
+
+/**
  * Copyright (c) 2000-2013 Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
@@ -185,7 +189,7 @@ public class EnhancedJournalAppServiceImpl extends EnhancedJournalAppServiceBase
                 article.getResourcePrimKey(), actionId);
     }
 
-    /***
+    /**
      * This method is based in JournalArticleImpl.getArticleImageURL, but
      * without dependency to ThemeDisplay
      * 
@@ -198,7 +202,6 @@ public class EnhancedJournalAppServiceImpl extends EnhancedJournalAppServiceBase
         }
 
         if (Validator.isNotNull(article.getSmallImageURL())) {
-            System.out.println("OJO AQUI "+article.getSmallImageURL());
             return article.getSmallImageURL();
         }
 
