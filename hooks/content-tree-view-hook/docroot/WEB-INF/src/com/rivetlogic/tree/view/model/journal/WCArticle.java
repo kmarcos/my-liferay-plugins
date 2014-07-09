@@ -17,7 +17,6 @@
 
 package com.rivetlogic.tree.view.model.journal;
 
-import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portlet.journal.model.JournalArticle;
 
@@ -25,8 +24,9 @@ import java.io.Serializable;
 
 /**
  * POJO for Journal Article, augmented in order to add permissions
+ * 
  * @author rivetlogic
- *
+ * 
  */
 public class WCArticle implements Serializable {
 
@@ -52,7 +52,7 @@ public class WCArticle implements Serializable {
         this.deletePermission = false;
         this.updatePermission = false;
         this.rowCheckerId = article.getArticleId();
-        this.rowCheckerName = Folder.class.getSimpleName();
+        this.rowCheckerName = JournalArticle.class.getSimpleName();
     }
 
     public String getArticleId() {

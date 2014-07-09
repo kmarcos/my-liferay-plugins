@@ -17,15 +17,15 @@
 
 package com.rivetlogic.tree.view.model.journal;
 
-import com.liferay.portlet.journal.model.JournalArticle;
 import com.liferay.portlet.journal.model.JournalFolder;
 
 import java.io.Serializable;
 
 /**
  * POJO for Journal Folder, augmented in order to add permissions
+ * 
  * @author rivetlogic
- *
+ * 
  */
 public class WCFolder implements Serializable {
 
@@ -47,7 +47,7 @@ public class WCFolder implements Serializable {
         this.deletePermission = false;
         this.updatePermission = false;
         this.rowCheckerId = String.valueOf(folder.getFolderId());
-        this.rowCheckerName = JournalArticle.class.getSimpleName();
+        this.rowCheckerName = JournalFolder.class.getSimpleName();
     }
 
     public long getFolderId() {
