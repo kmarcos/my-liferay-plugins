@@ -49,6 +49,7 @@ AUI.add('rl-content-tree-view', function (A) {
 	var QUERY_ALL = -1;
 	var REG_EXP_GLOBAL = 'g';
 	var SHORTCUT_LABEL = 'shortcut-tree-node-label';
+	var END_GET_CHILDREN_EVENT = 'treeview:reset';
 	 
     A.Rivet.ContentTreeView = A.Base.create('rl-content-tree-view',A.Base, [], {
 
@@ -107,10 +108,19 @@ AUI.add('rl-content-tree-view', function (A) {
         		        	}
         		       	],
         		       	after: {
-        		       		'drop:hit': A.bind(instance._afterDropHitHandler,this)
+        		       		'drop:hit': A.bind(instance._afterDropHitHandler,this),
         		       	},
         		       	on: {
-        		       		'drop:hit': A.bind(instance._dropHitHandler,this)
+        		       		'drop:hit': A.bind(instance._dropHitHandler,this),
+        		       		'drag:start': function(event){
+        		       			console.log(event);
+        		       			console.log("drag:start")
+        		       		},
+        		       		'drag:end': function(event){
+        		       			console.log(event);
+        		       			console.log("drag:end")
+        		       		},
+        		       		'treeview:reset': A.bind(instance._endLoadChildren,this)
         		       	}
         		      }
         		    ).render();
@@ -157,6 +167,12 @@ AUI.add('rl-content-tree-view', function (A) {
         
         _isDLTarget: function(){        	
         	return (this.treeTarget === A.Rivet.TreeTargetDL);
+        },
+        
+        _endLoadChildren: function (event){
+        	console.log('on treeview:reset '); 
+   			console.log(event);
+   			this.contentTree.renderUI();
         },
         
         _dropHitHandler: function(event){        	
@@ -385,10 +401,6 @@ AUI.add('rl-content-tree-view', function (A) {
         		if (!(this._isFullLoaded(treeNode))){
         			this._getChildren(treeNode, this);
         		}
-        		else{
-        			//if is loading children, it will be expanded anyway
-        			treeNode.toggle();
-        		}
             }
         },
         
@@ -403,9 +415,8 @@ AUI.add('rl-content-tree-view', function (A) {
         },
                     
        _addContentNode: function(newNodeConfig, parentNode, isFolder){
-    	   var forceBindUI = true;
     	   var nodeType = '';
-    	   var label = newNodeConfig.label+'-'+newNodeConfig.id;
+    	   var label = newNodeConfig.label;
     	   var nodeId = newNodeConfig.id;
     	   
     	   if (parentNode === undefined && newNodeConfig.parentFolderId !== undefined){
@@ -448,9 +459,7 @@ AUI.add('rl-content-tree-view', function (A) {
         		newNode.set(NODE_ATTR_PREVIEW_URL, newNodeConfig.previewURL);
         	}         	
         	parentNode.appendChild(newNode);        	
-        	if (forceBindUI){
-        		this.contentTree.bindUI();
-        	}        	
+    		this.contentTree.bindUI();        	
         	if (nodeType === NODE_TYPE_CHECKBOX){
         		// add checkbox
         		this._addProcessCheckbox(newNodeConfig);
@@ -516,6 +525,9 @@ AUI.add('rl-content-tree-view', function (A) {
            				
            				treeNode.set(NODE_ATTR_FULL_LOADED, true);
            	        	treeNode.expand();
+           	        	
+           	        	// Fix for floating tooltip
+           	        	instance.contentTree.fire('treeview:reset');
            			}
            		); 
         },
