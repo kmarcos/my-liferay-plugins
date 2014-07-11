@@ -220,7 +220,8 @@ AUI.add('rl-content-tree-view', function (A) {
         		else{
         			this._moveJournalContentNode(node, target);
         		}
-        	}       	        	
+        	}
+        	this.contentTree.bindUI();
         },
         
         _moveDLContentNode: function(node, target){
