@@ -49,7 +49,7 @@ AUI.add('rl-content-tree-view', function (A) {
 	var QUERY_ALL = -1;
 	var REG_EXP_GLOBAL = 'g';
 	var SHORTCUT_LABEL = 'shortcut-tree-node-label';
-	var END_GET_CHILDREN_EVENT = 'treeview:reset';
+	var TOOLTIP_HELPER_PROPERTY = 'helper';
 	 
     A.Rivet.ContentTreeView = A.Base.create('rl-content-tree-view',A.Base, [], {
 
@@ -65,6 +65,8 @@ AUI.add('rl-content-tree-view', function (A) {
     	defaultArticleImage: null,
     	viewPageBaseURL: null,
     	shortcutNode: null,
+    	//Flag to fix with tooltip when a folder is opened
+    	mouseIsDown: false,
 
         initializer: function () {
         
@@ -73,13 +75,13 @@ AUI.add('rl-content-tree-view', function (A) {
         	this._getTargetAttributes();        	
         	this.viewPageBaseURL = this.get('viewPageBaseURL');   
         	this.defaultArticleImage = this.get('defaultArticleImage');
+        	this.mouseIsDown = false;
         	
         	var folderId = this.get('rootFolderId');
         	var folderLabel = this.get('rootFolderLabel');
         	var checkAllEntriesId = this.get('checkAllId');
         	var shortcutImageURL = this.get('shortcutImageURL');
-        	
-        	
+        	     	
         	var instance = this;
         	var boundingBoxId = this.ns + this.get('treeBox');
         	var hiddenBoundingBoxId = boundingBoxId + 'HiddenFields';
@@ -112,15 +114,10 @@ AUI.add('rl-content-tree-view', function (A) {
         		       	},
         		       	on: {
         		       		'drop:hit': A.bind(instance._dropHitHandler,this),
-        		       		'drag:start': function(event){
-        		       			console.log(event);
-        		       			console.log("drag:start")
-        		       		},
-        		       		'drag:end': function(event){
-        		       			console.log(event);
-        		       			console.log("drag:end")
-        		       		},
-        		       		'treeview:reset': A.bind(instance._endLoadChildren,this)
+        		       		/* Next three events are used to fix but with tooltip when a folder is opened */
+        		       		'drag:start':A.bind(instance._dragStart,this),
+        		       		'drag:mouseDown': A.bind(instance._mouseDown,this),
+        		       		'drag:mouseup': A.bind(instance._mouseUp,this)
         		       	}
         		      }
         		    ).render();
@@ -169,10 +166,24 @@ AUI.add('rl-content-tree-view', function (A) {
         	return (this.treeTarget === A.Rivet.TreeTargetDL);
         },
         
-        _endLoadChildren: function (event){
-        	console.log('on treeview:reset '); 
-   			console.log(event);
-   			this.contentTree.renderUI();
+        _mouseDown: function (event){
+   			this.mouseIsDown = true;
+        },
+        
+        _mouseUp: function (event){
+   			this.mouseIsDown = false;
+        },
+        
+        _dragStart: function (event){
+        	var instance  = this;
+        	event.target.after('dragNodeChange', 
+    			function() {
+         			if (!instance.mouseIsDown){
+         				instance.contentTree.get(TOOLTIP_HELPER_PROPERTY).hide();
+         			}
+ 			});
+   			
+   			
         },
         
         _dropHitHandler: function(event){        	
@@ -525,9 +536,6 @@ AUI.add('rl-content-tree-view', function (A) {
            				
            				treeNode.set(NODE_ATTR_FULL_LOADED, true);
            	        	treeNode.expand();
-           	        	
-           	        	// Fix for floating tooltip
-           	        	instance.contentTree.fire('treeview:reset');
            			}
            		); 
         },
