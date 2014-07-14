@@ -125,7 +125,7 @@ public class EnhancedDLAppServiceImpl extends EnhancedDLAppServiceBaseImpl {
      * @param fileEntry
      * @param dlFileEntry
      */
-    private void setPreviewDataForEntry(FileEntry fileEntry, DLFileEntry dlFileEntry) {
+    private void setPreviewDataForEntry(final FileEntry fileEntry, DLFileEntry dlFileEntry) {
 
         ThemeDisplay themeDisplay = null;
         FileVersion latestFileVersion;

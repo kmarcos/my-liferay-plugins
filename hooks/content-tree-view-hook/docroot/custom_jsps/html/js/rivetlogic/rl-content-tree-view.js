@@ -62,6 +62,7 @@ AUI.add('rl-content-tree-view', function (A) {
     	compiledItemSelectorTemplate: null,
     	hiddenFieldsBox: null,
     	previewBoundingBox: null,
+    	defaultDocumentImagePath: null,
     	defaultArticleImage: null,
     	viewPageBaseURL: null,
     	shortcutNode: null,
@@ -74,6 +75,7 @@ AUI.add('rl-content-tree-view', function (A) {
         	this.scopeGroupId = this.get('scopeGroupId');
         	this._getTargetAttributes();        	
         	this.viewPageBaseURL = this.get('viewPageBaseURL');   
+        	this.defaultDocumentImagePath = this.get('defaultDocumentImagePath');
         	this.defaultArticleImage = this.get('defaultArticleImage');
         	this.mouseIsDown = false;
         	
@@ -508,6 +510,7 @@ AUI.add('rl-content-tree-view', function (A) {
            					var enableCheckbox = (item.deletePermission || item.updatePermission);
            					//if it is a file entry
            					if (item.fileEntryId !== undefined){
+           						var documentImageURL = instance._getDocumentImageURL(item); 
             					instance.addContentEntry({
             						id : item.fileEntryId.toString(),
             						label: item.title,
@@ -517,7 +520,7 @@ AUI.add('rl-content-tree-view', function (A) {
         							rowCheckerName: item.rowCheckerName,
             						expanded: false,
                						fullLoaded: true,
-               						previewURL: item.previewFileURL,
+               						previewURL: documentImageURL,
             					},treeNode);
            					}
            					//If it is a folder
@@ -601,6 +604,14 @@ AUI.add('rl-content-tree-view', function (A) {
 			return articleImageURL;
         },
         
+        _getDocumentImageURL: function(item){
+        	var documentImageURL = item.previewFileURL;
+			if (documentImageURL === null ||documentImageURL === undefined){
+				documentImageURL = this.defaultDocumentImagePath+item.extension+'.png';
+			}
+			return documentImageURL;
+        },
+        
         _isFolder: function(treeNode){
         	result = false;
         	if (treeNode){
@@ -653,6 +664,9 @@ AUI.add('rl-content-tree-view', function (A) {
             defaultArticleImage:{
             	value: null
             },
+            defaultDocumentImagePath:{
+            	value: null
+            }
         }
     });
  

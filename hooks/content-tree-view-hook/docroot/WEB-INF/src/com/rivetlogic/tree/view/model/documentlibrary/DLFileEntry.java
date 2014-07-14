@@ -18,13 +18,15 @@
 package com.rivetlogic.tree.view.model.documentlibrary;
 
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portlet.documentlibrary.util.DLUtil;
 
 import java.io.Serializable;
 
 /**
  * POJO for DL FileEntry, augmented in order to add permissions
+ * 
  * @author rivetlogic
- *
+ * 
  */
 public class DLFileEntry implements Serializable {
 
@@ -33,6 +35,7 @@ public class DLFileEntry implements Serializable {
     private String title = "";
     private String description = "";
     private String version = "";
+    private String extension = "";
     private long folderId;
     private long repositoryId;
     private boolean shortcut = false;
@@ -49,6 +52,7 @@ public class DLFileEntry implements Serializable {
         this.title = fileEntry.getTitle();
         this.description = fileEntry.getDescription();
         this.version = fileEntry.getVersion();
+        this.extension = DLUtil.getGenericName(fileEntry.getExtension());
         this.folderId = fileEntry.getFileEntryId();
         this.repositoryId = fileEntry.getRepositoryId();
         this.deletePermission = false;
@@ -87,6 +91,14 @@ public class DLFileEntry implements Serializable {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    public String getExtension() {
+        return extension;
+    }
+
+    public void setExtension(String extension) {
+        this.extension = extension;
     }
 
     public long getFolderId() {

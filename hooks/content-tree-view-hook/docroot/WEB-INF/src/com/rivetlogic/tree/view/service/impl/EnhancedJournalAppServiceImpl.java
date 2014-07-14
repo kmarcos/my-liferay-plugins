@@ -105,7 +105,7 @@ public class EnhancedJournalAppServiceImpl extends EnhancedJournalAppServiceBase
      * @param folder
      * @return true if it has permission the given action
      */
-    private boolean hasJournalFolderPermission(JournalFolder folder, String actionId) {
+    private boolean hasJournalFolderPermission(final JournalFolder folder, final String actionId) {
 
         PermissionChecker permissionChecker;
         try {
@@ -153,7 +153,7 @@ public class EnhancedJournalAppServiceImpl extends EnhancedJournalAppServiceBase
      * 
      * @return
      */
-    private boolean hasJournalArticlePermission(JournalArticle article, String actionId) {
+    private boolean hasJournalArticlePermission(final JournalArticle article, final String actionId) {
 
         PermissionChecker permissionChecker;
         try {

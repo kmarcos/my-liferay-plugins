@@ -56,7 +56,7 @@ if (fileShortcut != null) {
 	rowCheckerId: '<%= String.valueOf(rowCheckerId) %>',
 	rowCheckerName: '<%= rowCheckerName %>',
 	parentFolderId: '<%= parentFolderId %>',
-	previewURL:'<%= previewFileURL %>',
+	previewURL:'<%= Validator.isNotNull(previewFileURL) ? previewFileURL : themeDisplay.getPathThemeImages() + "/file_system/large/"+DLUtil.getGenericName(fileEntry.getExtension())+".png" %>',
 	viewURL: '<%= tempRowURL %>'
 });
 </aui:script>
