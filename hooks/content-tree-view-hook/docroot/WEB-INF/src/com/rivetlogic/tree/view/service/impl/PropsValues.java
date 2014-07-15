@@ -17,6 +17,7 @@
 
 package com.rivetlogic.tree.view.service.impl;
 
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 
@@ -34,14 +35,8 @@ final public class PropsValues {
     }
 
     /**
-     * Container for audio
+     * Thumbnail available
      */
-    public static final String[] DL_FILE_ENTRY_PREVIEW_AUDIO_CONTAINERS = PropsUtil
-            .getArray(PropsKeys.DL_FILE_ENTRY_PREVIEW_AUDIO_CONTAINERS);
-    /**
-     * Container for video
-     */
-    public static final String[] DL_FILE_ENTRY_PREVIEW_VIDEO_CONTAINERS = PropsUtil
-            .getArray(PropsKeys.DL_FILE_ENTRY_PREVIEW_VIDEO_CONTAINERS);
-
+    public static final boolean DL_FILE_ENTRY_THUMBNAIL_ENABLED = GetterUtil.getBoolean(PropsUtil
+            .get(PropsKeys.DL_FILE_ENTRY_THUMBNAIL_ENABLED));
 }

@@ -44,8 +44,6 @@ if (fileShortcut != null) {
 }
 %>
 
-<%@ include file="/html/portlet/document_library/preview_query.jspf" %>
-
 <aui:script use="rl-content-tree-view">
 
 <portlet:namespace />treeView.addContentEntry({
@@ -56,7 +54,7 @@ if (fileShortcut != null) {
 	rowCheckerId: '<%= String.valueOf(rowCheckerId) %>',
 	rowCheckerName: '<%= rowCheckerName %>',
 	parentFolderId: '<%= parentFolderId %>',
-	previewURL:'<%= Validator.isNotNull(previewFileURL) ? previewFileURL : themeDisplay.getPathThemeImages() + "/file_system/large/"+DLUtil.getGenericName(fileEntry.getExtension())+".png" %>',
+	previewURL:'<%= DLUtil.getThumbnailSrc(fileEntry, latestFileVersion, fileShortcut, themeDisplay) %>',
 	viewURL: '<%= tempRowURL %>'
 });
 </aui:script>

@@ -66,6 +66,8 @@ public class EnhancedJournalAppServiceImpl extends EnhancedJournalAppServiceBase
      * the enhanced journal app remote service.
      */
 
+    private static final String JOURNAL_IMAGE_PATH_BEGINS = "/journal/article?img_id=";
+    private static final String JOURNAL_IMAGE_TOKEN_PARAMETER = "&t=";
     private static final Log log = LogFactoryUtil.getLog(EnhancedJournalAppServiceImpl.class);
 
     public List<Object> getFoldersAndArticles(long groupId, long folderId, int start, int end) throws SystemException {
@@ -205,7 +207,7 @@ public class EnhancedJournalAppServiceImpl extends EnhancedJournalAppServiceBase
             return article.getSmallImageURL();
         }
 
-        return "/journal/article?img_id=" + article.getSmallImageId() + "&t="
+        return JOURNAL_IMAGE_PATH_BEGINS + article.getSmallImageId() + JOURNAL_IMAGE_TOKEN_PARAMETER
                 + WebServerServletTokenUtil.getToken(article.getSmallImageId());
     }
 }

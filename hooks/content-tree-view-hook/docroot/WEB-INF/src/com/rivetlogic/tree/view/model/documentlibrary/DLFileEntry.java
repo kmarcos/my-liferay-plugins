@@ -41,8 +41,6 @@ public class DLFileEntry implements Serializable {
     private boolean shortcut = false;
     private boolean deletePermission;
     private boolean updatePermission;
-    /* for preview */
-    private int previewFileCount;
     private String previewFileURL;
     private String rowCheckerId = "";
     private String rowCheckerName = "";
@@ -139,14 +137,6 @@ public class DLFileEntry implements Serializable {
 
     public void setUpdatePermission(boolean updatePermission) {
         this.updatePermission = updatePermission;
-    }
-
-    public int getPreviewFileCount() {
-        return previewFileCount;
-    }
-
-    public void setPreviewFileCount(int previewFileCount) {
-        this.previewFileCount = previewFileCount;
     }
 
     public String getPreviewFileURL() {

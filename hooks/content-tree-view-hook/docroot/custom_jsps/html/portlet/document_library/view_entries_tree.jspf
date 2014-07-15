@@ -145,7 +145,7 @@ if (<portlet:namespace />treeViewNode == undefined){
 				tempRowURL.setParameter("redirect", HttpUtil.removeParameter(currentURL, liferayPortletResponse.getNamespace() + "ajax"));
 				tempRowURL.setParameter("fileEntryId", String.valueOf(latestFileVersion.getFileEntryId()));
 		        %>
-		        <%@ include file="/html/portlet/document_library/preview_query.jspf" %>
+
 		        <portlet:namespace />treeView.addContentEntry({
 		        	id : '<%= latestFileVersion.getFileEntryId() %>',
 		        	label: '<%= latestFileVersion.getTitle() %>',
@@ -154,8 +154,8 @@ if (<portlet:namespace />treeViewNode == undefined){
 		        	rowCheckerId: '<%= String.valueOf(rowCheckerId) %>',
 		        	rowCheckerName: '<%= rowCheckerName %>',
 		        	parentFolderId: '<%= parentFolderId %>',
-		        	previewURL:'<%= Validator.isNotNull(previewFileURL) ? previewFileURL : themeDisplay.getPathThemeImages() + "/file_system/large/"+DLUtil.getGenericName(fileEntry.getExtension())+".png" %>',
-					viewURL: '<%= tempRowURL %>'  	
+		        	previewURL:'<%= DLUtil.getThumbnailSrc(fileEntry, latestFileVersion, fileShortcut, themeDisplay) %>',
+		        	viewURL: '<%= tempRowURL %>'  	
 		        });
 		        <%
 		    }

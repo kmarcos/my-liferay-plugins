@@ -30,7 +30,6 @@ import com.liferay.portal.security.permission.ActionKeys;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portlet.documentlibrary.model.DLFileShortcut;
 import com.liferay.portlet.documentlibrary.service.DLAppServiceUtil;
-import com.liferay.portlet.documentlibrary.util.AudioProcessorUtil;
 import com.liferay.portlet.documentlibrary.util.DLUtil;
 import com.liferay.portlet.documentlibrary.util.ImageProcessorUtil;
 import com.liferay.portlet.documentlibrary.util.PDFProcessorUtil;
@@ -69,6 +68,9 @@ public class EnhancedDLAppServiceImpl extends EnhancedDLAppServiceBaseImpl {
      * enhanced d l app remote service.
      */
 
+    private static final String IMAGE_THUMBNAIL_QUERY_STRING = "&imageThumbnail=1";
+    private static final String DOCUMENT_THUMBNAIL_QUERY_STRING = "&documentThumbnail=1";
+    private static final String VIDEO_THUMBNAIL_QUERY_STRING = "&videoThumbnail=1";
     private static final Log log = LogFactoryUtil.getLog(EnhancedDLAppServiceImpl.class);
 
     public List<Object> getFoldersAndFileEntriesAndFileShortcuts(long repositoryId, long folderId, int status,
@@ -95,7 +97,7 @@ public class EnhancedDLAppServiceImpl extends EnhancedDLAppServiceBaseImpl {
                         .setDeletePermission(fileEntry.containsPermission(getPermissionChecker(), ActionKeys.DELETE));
                 dlFileEntry
                         .setUpdatePermission(fileEntry.containsPermission(getPermissionChecker(), ActionKeys.UPDATE));
-                setPreviewDataForEntry(fileEntry, dlFileEntry);
+                dlFileEntry.setPreviewFileURL(getThumbnailURL(fileEntry, null, dlFileEntry));
                 results.add(dlFileEntry);
             }
             if (o instanceof DLFileShortcut) {
@@ -109,7 +111,7 @@ public class EnhancedDLAppServiceImpl extends EnhancedDLAppServiceBaseImpl {
                 dlFileEntry.setShortcut(true);
                 dlFileEntry.setRowCheckerName(DLFileShortcut.class.getSimpleName());
                 dlFileEntry.setRowCheckerId(String.valueOf(dLFileShortcut.getFileShortcutId()));
-                setPreviewDataForEntry(fileEntry, dlFileEntry);
+                dlFileEntry.setPreviewFileURL(getThumbnailURL(fileEntry, dLFileShortcut, dlFileEntry));
                 results.add(dlFileEntry);
             }
         }
@@ -117,99 +119,45 @@ public class EnhancedDLAppServiceImpl extends EnhancedDLAppServiceBaseImpl {
     }
 
     /**
-     * This logic was taken from
-     * html/portlet/document_library/view_file_entry.jsp under <c:if
-     * test="<%= PropsValues.DL_FILE_ENTRY_PREVIEW_ENABLED %>"> It is also
-     * replicated in hook file preview_query.jspf
+     * Taken from DLUtil.getThumbnailSrc method, to avoid required object theme
+     * display
      * 
      * @param fileEntry
+     * @param fileShortcut
      * @param dlFileEntry
+     * @return
      */
-    private void setPreviewDataForEntry(final FileEntry fileEntry, DLFileEntry dlFileEntry) {
-
+    private String getThumbnailURL(final FileEntry fileEntry, final DLFileShortcut fileShortcut,
+            final DLFileEntry dlFileEntry) {
         ThemeDisplay themeDisplay = null;
+        String thumbnailSrc = null;
         FileVersion latestFileVersion;
-        // Using string variable for type parameter
-        String PARAMETER_TYPE = "&type=";
 
         try {
             latestFileVersion = fileEntry.getLatestFileVersion();
+            String thumbnailQueryString = null;
+
+            if (PropsValues.DL_FILE_ENTRY_THUMBNAIL_ENABLED) {
+                if (ImageProcessorUtil.hasImages(latestFileVersion)) {
+                    thumbnailQueryString = IMAGE_THUMBNAIL_QUERY_STRING;
+                } else if (PDFProcessorUtil.hasImages(latestFileVersion)) {
+                    thumbnailQueryString = DOCUMENT_THUMBNAIL_QUERY_STRING;
+                } else if (VideoProcessorUtil.hasVideo(latestFileVersion)) {
+                    thumbnailQueryString = VIDEO_THUMBNAIL_QUERY_STRING;
+                }
+            }
+
+            if (Validator.isNotNull(thumbnailQueryString)) {
+                thumbnailSrc = DLUtil.getPreviewURL(fileEntry, latestFileVersion, themeDisplay, thumbnailQueryString,
+                        true, true);
+            }
+
         } catch (PortalException e) {
             log.error(e);
-            return;
         } catch (SystemException e) {
             log.error(e);
-            return;
         }
 
-        boolean hasAudio = AudioProcessorUtil.hasAudio(latestFileVersion);
-        boolean hasImages = ImageProcessorUtil.hasImages(latestFileVersion);
-        boolean hasPDFImages = PDFProcessorUtil.hasImages(latestFileVersion);
-        boolean hasVideo = VideoProcessorUtil.hasVideo(latestFileVersion);
-
-        int previewFileCount = 0;
-        String previewFileURL = null;
-        String[] previewFileURLs = null;
-        String videoThumbnailURL = null;
-
-        String previewQueryString = null;
-
-        if (hasAudio) {
-            previewQueryString = "&audioPreview=1";
-        } else if (hasImages) {
-            previewQueryString = "&imagePreview=1";
-        } else if (hasPDFImages) {
-            previewFileCount = PDFProcessorUtil.getPreviewFileCount(latestFileVersion);
-
-            // number one is added here. It was originally in the html
-            previewQueryString = "&previewFileIndex=1";
-
-            previewFileURL = DLUtil.getPreviewURL(fileEntry, latestFileVersion, themeDisplay, previewQueryString);
-        } else if (hasVideo) {
-            previewQueryString = "&videoPreview=1";
-
-            videoThumbnailURL = DLUtil.getPreviewURL(fileEntry, latestFileVersion, themeDisplay, "&videoThumbnail=1");
-        }
-
-        if (Validator.isNotNull(previewQueryString)) {
-            if (hasAudio) {
-                previewFileURLs = new String[PropsValues.DL_FILE_ENTRY_PREVIEW_AUDIO_CONTAINERS.length];
-
-                for (int i = 0; i < PropsValues.DL_FILE_ENTRY_PREVIEW_AUDIO_CONTAINERS.length; i++) {
-                    previewFileURLs[i] = DLUtil
-                            .getPreviewURL(fileEntry, latestFileVersion, themeDisplay, previewQueryString
-                                    + PARAMETER_TYPE + PropsValues.DL_FILE_ENTRY_PREVIEW_AUDIO_CONTAINERS[i]);
-                }
-            } else if (hasVideo) {
-                /* This code is only for referencial purposes, for preview image is not correct 
-                if (PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_CONTAINERS.length > 0) {
-                    previewFileURLs = new String[PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_CONTAINERS.length];
-
-                    for (int i = 0; i < PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_CONTAINERS.length; i++) {
-                        previewFileURLs[i] = DLUtil.getPreviewURL(fileEntry, latestFileVersion, themeDisplay,
-                                previewQueryString + PARAMETER_TYPE
-                                        + PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_CONTAINERS[i]);
-                    }
-                } else {*/
-                    previewFileURLs = new String[1];
-
-                    previewFileURLs[0] = videoThumbnailURL;
-                //}
-            } else {
-                previewFileURLs = new String[1];
-
-                previewFileURLs[0] = DLUtil.getPreviewURL(fileEntry, latestFileVersion, themeDisplay,
-                        previewQueryString);
-            }
-
-            previewFileURL = previewFileURLs[0];
-
-            if (hasPDFImages) {
-                previewFileCount = 1;
-            }
-
-            dlFileEntry.setPreviewFileCount(previewFileCount);
-            dlFileEntry.setPreviewFileURL(previewFileURL);
-        }
+        return thumbnailSrc;
     }
 }
