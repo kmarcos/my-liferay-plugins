@@ -181,6 +181,7 @@ public class EnhancedDLAppServiceImpl extends EnhancedDLAppServiceBaseImpl {
                                     + PARAMETER_TYPE + PropsValues.DL_FILE_ENTRY_PREVIEW_AUDIO_CONTAINERS[i]);
                 }
             } else if (hasVideo) {
+                /* This code is only for referencial purposes, for preview image is not correct 
                 if (PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_CONTAINERS.length > 0) {
                     previewFileURLs = new String[PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_CONTAINERS.length];
 
@@ -189,11 +190,11 @@ public class EnhancedDLAppServiceImpl extends EnhancedDLAppServiceBaseImpl {
                                 previewQueryString + PARAMETER_TYPE
                                         + PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_CONTAINERS[i]);
                     }
-                } else {
+                } else {*/
                     previewFileURLs = new String[1];
 
                     previewFileURLs[0] = videoThumbnailURL;
-                }
+                //}
             } else {
                 previewFileURLs = new String[1];
 

@@ -60,6 +60,7 @@
 			}
 		}
 		else if (hasVideo) {
+		    /* This code is only for referencial purposes, for preview image is not correct 
 			if (PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_CONTAINERS.length > 0) {
 				previewFileURLs = new String[PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_CONTAINERS.length];
 	
@@ -67,11 +68,11 @@
 					previewFileURLs[i] = DLUtil.getPreviewURL(fileEntry, latestFileVersion, themeDisplay, previewQueryString + "&type=" + PropsValues.DL_FILE_ENTRY_PREVIEW_VIDEO_CONTAINERS[i]);
 				}
 			}
-			else {
+			else { */
 				previewFileURLs = new String[1];
 	
 				previewFileURLs[0] = videoThumbnailURL;
-			}
+			//}
 		}
 		else {
 			previewFileURLs = new String[1];
